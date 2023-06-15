@@ -16,7 +16,7 @@ There are 4 types of benchmarks:
 4. inverse building mix
     - the inverse of the same building mix images
 
-The terrains in the benchmark are discretized with a 1m tile size, and 
+The terrains in the benchmark are discretized with a 1m tile size, and include maps ranging from 20 to 60 meters of edge size.
 
 
 ## Measures
