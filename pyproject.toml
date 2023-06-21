@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "my-project"
+version = "0.1.0"
+description = "A complex Python project"
+authors = ["John Doe <john.doe@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+flake8 = "^4.0.1"
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 129
+target-version = ['py311']
+
+[tool.pytest]
+addopts = "--verbose --cov=my_project --cov-report=html"
