@@ -1,9 +1,18 @@
+import osmnx as ox
+import matplotlib.pyplot as plt
+from PIL import Image
 import json
+
+from pyproj import Proj, transform
+import json
+
 import matplotlib.pyplot as plt
 import osmnx as ox
+import cv2
 from PIL import Image
 from pyproj import Proj, transform
-
+import os
+from shapely.geometry import Polygon, Point
 
 def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder="data/", folder_path=None):
     """
@@ -21,7 +30,11 @@ def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder
     Returns:
     None
     """
-    # Fetch buildings from OSM
+    # make sure the save folder exists
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
+    # Fetch buildings from OSM\
     bbox = (north, south, east, west)
     buildings = ox.geometries.geometries_from_bbox(*bbox, tags={'building': True})
     print("got buildings")
@@ -40,6 +53,23 @@ def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder
 
 
 def extract_crop(buildings, wgs84, utm, north, south, east, west, save_folder):
+    # Convert the bounding box to UTM
+    west_utm, south_utm = transform(wgs84, utm, west, south)
+    east_utm, north_utm = transform(wgs84, utm, east, north)
+
+    # Create a Polygon that represents the bounding box
+    bbox_polygon = Polygon([(west_utm, south_utm), (east_utm, south_utm),
+                            (east_utm, north_utm), (west_utm, north_utm)])
+
+    # Count how many buildings have their centroid within the bounding box
+    buildings_in_bbox = sum(bbox_polygon.contains(Point(transform(wgs84, utm, *building.centroid.coords[0])))
+                            for building in buildings.geometry)
+
+    # Check the number of buildings. Return if less than 2.
+    if buildings_in_bbox < 2:
+        print("Less than 2 buildings found in the given bounding box")
+        return
+
     try:
         # Convert total bounds to UTM
         total_bounds_utm = [transform(wgs84, utm, buildings.total_bounds[i], buildings.total_bounds[i + 1]) for i in
@@ -72,6 +102,18 @@ def extract_crop(buildings, wgs84, utm, north, south, east, west, save_folder):
         plt.close()
     except ValueError:
         print("No buildings found in the given bounding box")
+        return
+
+        # Post-process the image with OpenCV to count the number of distinct buildings
+    image = cv2.imread(f"{save_path}.png", cv2.IMREAD_GRAYSCALE)
+    ret, thresh = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+    num_labels, labels = cv2.connectedComponents(thresh)
+
+    # Check the number of distinct buildings (subtract 1 because the background is also considered a label)
+    num_buildings = num_labels - 1
+    if num_buildings < 2:
+        print("Less than 2 distinct buildings found in the image")
+        os.remove(f"{save_path}.png")  # Delete the image if it has less than 2 buildings
         return
 
     # Open the image file with PIL and get its size in pixels
@@ -221,7 +263,7 @@ if __name__ == "__main__":
     # to get the bbox use https://colab.research.google.com/github/opengeos/segment-geospatial/blob/main/docs/examples/satellite.ipynb#scrollTo=kvB16LLk0qPY
     center_bbox = (47.378177, 47.364622, 8.526535, 8.544894)
     zurich_bbox = (47.3458, 47.409, 8.5065, 8.5814)
-    folder_path = 'data/openstreet'
+    folder_path = 'data/openstreet/crops'
     # get_building_shapes_from_OSM(*zurich_bbox, option=1, folder_path=folder_path, save_folder=folder_path + "/" +
     #                                                                                         "random_crops")
     num_crop = 100

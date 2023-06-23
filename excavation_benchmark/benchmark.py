@@ -3,7 +3,6 @@ from typing import Dict
 
 import numpy as np
 
-
 def compute_scores(workspace_image: np.array, path_image_frame: np.array, num_local_workspaces:
 int, radial_workspace_dim: float, resolution: float):
     """
