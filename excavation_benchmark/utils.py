@@ -353,3 +353,56 @@ def size_filter(image_folder, save_folder, metadata_folder, min_size = (20, 20))
         real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
         if real_dimensions[0] > min_size[0] and real_dimensions[1] > min_size[1]:
             cv2.imwrite(save_folder + '/' + filename, image)
+
+
+
+def fill_holes(image: np.array):
+    """
+    Fills the holes in the image. The holes are white area in the image surrounded by black pixels.
+    """
+    # Threshold the image, let's assume that white is the color of the holes
+    _, thresh = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY_INV)
+
+    # Copy the thresholded image
+    im_floodfill = thresh.copy()
+
+    # Mask used for flood filling.
+    # Notice the size needs to be 2 pixels larger than the image.
+    h, w = thresh.shape[:2]
+    mask = np.zeros((h+2, w+2), np.uint8)
+
+    # Floodfill from point (0, 0)
+    cv2.floodFill(im_floodfill, mask, (0,0), 255)
+
+    # Invert the floodfilled image
+    im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+
+    # Combine the two images to get the foreground
+    filled_image = thresh | im_floodfill_inv
+
+    # obtain the image in the right format by flipping the colors
+    filled_image = 255 - filled_image
+
+    return filled_image
+
+
+def fill_dataset(image_folder, save_folder):
+    """
+    Goes through all the images in image_folder and fill the holes in the images. The filled images are saved in
+    save_folder.
+    """
+    # if the folder does not exist, create it
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
+    for filename in os.listdir(image_folder):
+        # if json just copy
+        if filename[-4:] == 'json':
+            shutil.copy(image_folder + '/' + filename, save_folder + '/' + filename)
+            continue
+        elif filename[-3:] == 'png':
+            image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
+            filled_image = fill_holes(image)
+            cv2.imwrite(save_folder + '/' + filename, filled_image)
+        else:
+            continue

@@ -187,3 +187,46 @@ def save_score(filename, save_folder: str, score: Dict, angle_opt: float = 0):
                              score['covered_area_fraction']])
         except KeyError:
             print("score does not contain all the keys")
+
+
+def process_csv_scores(csv_filename: str):
+    """
+    This function reads a CSV file containing scores and returns a dictionary with the scores.
+    Header: filename, success (bool), angle_opt (float), path_score (float), workspace_score (float),
+    covered_area_fraction (float)
+    """
+    scores = {}
+    with open(csv_filename, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # skip header
+        for row in reader:
+            filename = row[0]
+            success = row[1] == 'True'  # Convert to bool
+            angle_opt = float(row[2])  # Convert to float
+            path_score = float(row[3])  # Convert to float
+            workspace_score = float(row[4])  # Convert to float
+            covered_area_fraction = float(row[5])  # Convert to float
+            scores[filename] = {'success': success, 'angle_opt': angle_opt, 'path_score': path_score,
+                                'workspace_score': workspace_score, 'covered_area_fraction': covered_area_fraction}
+    return scores
+
+
+
+def summarize_scores(scores: Dict):
+    """
+    This function takes a dictionary of scores and returns a dictionary with the average scores.
+    """
+    num_cases = len(scores)
+    success_count = sum([score['success'] for score in scores.values()])
+    success_percentage = (success_count / num_cases) * 100
+    avg_path_score = np.mean([score['path_score'] for score in scores.values()])
+    std_path_score = np.std([score['path_score'] for score in scores.values()])
+    avg_workspace_score = np.mean([score['workspace_score'] for score in scores.values()])
+    std_workspace_score = np.std([score['workspace_score'] for score in scores.values()])
+    avg_covered_area_fraction = np.mean([score['covered_area_fraction'] for score in scores.values()])
+    std_covered_area_fraction = np.std([score['covered_area_fraction'] for score in scores.values()])
+    summary = {'num_cases': num_cases, 'success_percentage': success_percentage, 'avg_path_score': avg_path_score,
+               'std_path_score': std_path_score, 'avg_workspace_score': avg_workspace_score,
+               'std_workspace_score': std_workspace_score, 'avg_covered_area_fraction': avg_covered_area_fraction,
+               'std_covered_area_fraction': std_covered_area_fraction}
+    return summary
