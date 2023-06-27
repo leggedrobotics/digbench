@@ -14,7 +14,7 @@ from pyproj import Proj, transform
 import os
 from shapely.geometry import Polygon, Point
 
-def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder="data/", folder_path=None):
+def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder="data/"):
     """
     Extracts building shapes from OpenStreetMap given a bounding box of coordinates.
 
@@ -47,7 +47,7 @@ def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder
     if option == 1:
         extract_crop(buildings, wgs84, utm, north, south, east, west, save_folder)
     elif option == 2:
-        extract_single_buildings(buildings, wgs84, utm, folder_path=folder_path)
+        extract_single_buildings(buildings, wgs84, utm, folder_path=save_folder)
     else:
         print('Invalid option selected. Choose either 1 or 2.')
 
@@ -134,6 +134,12 @@ def extract_crop(buildings, wgs84, utm, north, south, east, west, save_folder):
 
     # Save metadata file with real dimensions in meters
     metadata = {
+        'coordinates': {
+            'north': north,
+            'south': south,
+            'east': east,
+            'west': west
+        },
         'real_dimensions': {
             'height': new_width,
             'width': new_height
@@ -175,6 +181,8 @@ def extract_single_buildings(buildings, wgs84, utm, folder_path=None):
         ox.plot_footprints(buildings.iloc[i: i + 1], ax=ax, color='black', bgcolor='white', show=False)
         # plt.tight_layout()
         # new_size = fig.get_size_inches()
+        # create image folder if it does not exist
+        os.makedirs(f"{folder_path}/images", exist_ok=True)
         # apply padding
         plt.savefig(f"{folder_path}/images/building_{i}.png", dpi=dpi, pad_inches=1., bbox_inches='tight'
                     )
@@ -198,11 +206,12 @@ def extract_single_buildings(buildings, wgs84, utm, folder_path=None):
         metadata = {
             'building_index': i,
             'real_dimensions': {
-                'width': new_width,
-                'height': new_height
+                'width': new_height,
+                'height': new_width
             }
         }
-
+        # make metadata folder if it does not exist
+        os.makedirs(f"{folder_path}/metadata", exist_ok=True)
         with open(f"{folder_path}/metadata/building_{i}.json", 'w') as file:
             json.dump(metadata, file)
 
@@ -252,11 +261,8 @@ def collect_random_crops(bbox: Tuple, scale_factor: float, save_folder: str):
     )
 
     # Call get_building_shapes_from_OSM with option 2 to save the random crop
-    folder_path = f"{save_folder}/random_crops"
-    print("getting random crop")
-    get_building_shapes_from_OSM(*crop_bbox, option=1, save_folder=folder_path)
+    get_building_shapes_from_OSM(*crop_bbox, option=1, save_folder=save_folder)
 
-    print("Random crop saved in {}".format(folder_path))
 
 
 if __name__ == "__main__":

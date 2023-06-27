@@ -3,6 +3,7 @@ from typing import Dict
 
 import numpy as np
 
+
 def compute_scores(workspace_image: np.array, path_image_frame: np.array, num_local_workspaces:
 int, radial_workspace_dim: float, resolution: float):
     """
@@ -41,7 +42,7 @@ int, radial_workspace_dim: float, resolution: float):
 
     # number of workspaces
     num_workspaces = num_local_workspaces
-    num_workspaces_score = num_workspaces * np.pi ** 2 / 2 * radial_workspace_dim / dig_area if dig_area != 0 \
+    num_workspaces_score = num_workspaces * np.pi ** 2 / 2 * radial_workspace_dim ** 2 / dig_area if dig_area != 0 \
         else 0
 
     score_dict = {"success": success, "path_score": path_score, "workspace_score": num_workspaces_score,
@@ -208,7 +209,6 @@ def process_csv_scores(csv_filename: str):
             scores[filename] = {'success': success, 'angle_opt': angle_opt, 'path_score': path_score,
                                 'workspace_score': workspace_score, 'covered_area_fraction': covered_area_fraction}
     return scores
-
 
 
 def summarize_scores(scores: Dict):

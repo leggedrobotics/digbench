@@ -1,6 +1,8 @@
 import os
 import shutil
+
 import numpy as np
+
 from excavation_benchmark import terrain_generation
 
 
@@ -330,12 +332,12 @@ def generate_empty_occupancy(image_folder: str, save_folder: str):
         os.makedirs(save_folder)
     for filename in os.listdir(image_folder):
         image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
-        image = image/255
+        image = image / 255
         empty_image = 255 * np.ones(image.shape)
         cv2.imwrite(save_folder + '/' + filename, empty_image)
 
 
-def size_filter(image_folder, save_folder, metadata_folder, min_size = (20, 20)):
+def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20)):
     """
     Goes through all the images, check the real size in the metadata and save the image only if it's bigger than
     min_size. The min_size corresponds to the size of the whole image (same as reported in the metadata).
@@ -355,7 +357,6 @@ def size_filter(image_folder, save_folder, metadata_folder, min_size = (20, 20))
             cv2.imwrite(save_folder + '/' + filename, image)
 
 
-
 def fill_holes(image: np.array):
     """
     Fills the holes in the image. The holes are white area in the image surrounded by black pixels.
@@ -369,10 +370,10 @@ def fill_holes(image: np.array):
     # Mask used for flood filling.
     # Notice the size needs to be 2 pixels larger than the image.
     h, w = thresh.shape[:2]
-    mask = np.zeros((h+2, w+2), np.uint8)
+    mask = np.zeros((h + 2, w + 2), np.uint8)
 
     # Floodfill from point (0, 0)
-    cv2.floodFill(im_floodfill, mask, (0,0), 255)
+    cv2.floodFill(im_floodfill, mask, (0, 0), 255)
 
     # Invert the floodfilled image
     im_floodfill_inv = cv2.bitwise_not(im_floodfill)
@@ -386,7 +387,7 @@ def fill_holes(image: np.array):
     return filled_image
 
 
-def fill_dataset(image_folder, save_folder):
+def fill_dataset(image_folder, save_folder, copy_metadata=True):
     """
     Goes through all the images in image_folder and fill the holes in the images. The filled images are saved in
     save_folder.
@@ -396,13 +397,30 @@ def fill_dataset(image_folder, save_folder):
         os.makedirs(save_folder)
 
     for filename in os.listdir(image_folder):
-        # if json just copy
-        if filename[-4:] == 'json':
-            shutil.copy(image_folder + '/' + filename, save_folder + '/' + filename)
-            continue
-        elif filename[-3:] == 'png':
+
+        if copy_metadata:
+            # if json just copy
+            if filename[-4:] == 'json':
+                shutil.copy(image_folder + '/' + filename, save_folder + '/' + filename)
+                continue
+        if filename[-3:] == 'png':
             image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
             filled_image = fill_holes(image)
             cv2.imwrite(save_folder + '/' + filename, filled_image)
+        else:
+            continue
+
+
+def copy_metadata(folder, target_folder):
+    """
+    Copies only *json files from folder to target_folder
+    """
+    # if the folder does not exist, create it
+    if not os.path.exists(target_folder):
+        os.makedirs(target_folder)
+
+    for filename in os.listdir(folder):
+        if filename[-4:] == 'json':
+            shutil.copy(folder + '/' + filename, target_folder + '/' + filename)
         else:
             continue
