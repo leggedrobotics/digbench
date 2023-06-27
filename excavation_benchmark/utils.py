@@ -191,7 +191,7 @@ def preprocess_dataset_fixed_resolution(image_folder, image_metadata_folder, ima
         image = cv2.imread(image_path)
         # if not skip
         if image is None:
-            print(f"Unable to read or process image '{filename}'. Skipping...")
+            print(f"Unable to read or process image {image_path} in preprocess_dataset_fixed_resolution - pt1. Skipping...")
             continue
         image_metadata_path = os.path.join(image_metadata_folder, filename[:-4] + ".json")
 
@@ -209,7 +209,7 @@ def preprocess_dataset_fixed_resolution(image_folder, image_metadata_folder, ima
         else:
             # Check if image is None or has no shape
             if image is None or image.shape[0] is None or image.shape[1] is None:
-                print(f"Unable to read or process image '{filename}'. Skipping...")
+                print(f"Unable to read or process image {image_path} in preprocess_dataset_fixed_resolution - pt2. Skipping...")
                 continue
 
             # Get the original width and height
@@ -262,7 +262,7 @@ def preprocess_dataset(image_folder, metadata_folder, image_resized_folder, max_
 
         # Check if image is None or has no shape
         if image is None or image.shape[0] is None or image.shape[1] is None:
-            print(f"Unable to read or process image '{filename}'. Skipping...")
+            print(f"Unable to read or process image {image_path} in preprocess_dataset. Skipping...")
             continue
 
         # Get the original width and height
@@ -309,7 +309,7 @@ def invert_dataset(image_folder, image_inverted_folder):
 
         # Check if image is None or has no shape
         if image is None or image.shape[0] is None or image.shape[1] is None:
-            print(f"Unable to read or process image '{filename}'. Skipping...")
+            print(f"Unable to read or process image {image_path} in invert_dataset. Skipping...")
             continue
 
         # Invert the image using the invert_map function
@@ -332,6 +332,9 @@ def generate_empty_occupancy(image_folder: str, save_folder: str):
         os.makedirs(save_folder)
     for filename in os.listdir(image_folder):
         image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            print(f"Unable to read or process image {image_folder + '/' + filename} in generate_empty_occupancy. Skipping...")
+            continue
         image = image / 255
         empty_image = 255 * np.ones(image.shape)
         cv2.imwrite(save_folder + '/' + filename, empty_image)

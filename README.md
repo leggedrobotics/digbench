@@ -32,6 +32,11 @@ The benchmark script outputs measures of:
 
 
 ## Usage
+Setup the dataset by running
+~~~
+python -m excavation_benchmark.generate_datasets
+~~~
+
 Run the evaluation script selecting at least the model you'd like to evaluate, the benchmark name, and the output folder.
 ~~~
 python eval.py --model your_model --benchmark benchmark_name
