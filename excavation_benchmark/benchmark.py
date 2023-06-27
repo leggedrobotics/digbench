@@ -47,7 +47,6 @@ int, radial_workspace_dim: float, resolution: float):
 
     score_dict = {"success": success, "path_score": path_score, "workspace_score": num_workspaces_score,
                   "covered_area_fraction": covered_area_fraction}
-    print(score_dict)
     return score_dict
 
 
@@ -218,14 +217,17 @@ def summarize_scores(scores: Dict):
     num_cases = len(scores)
     success_count = sum([score['success'] for score in scores.values()])
     success_percentage = (success_count / num_cases) * 100
-    avg_path_score = np.mean([score['path_score'] for score in scores.values()])
-    std_path_score = np.std([score['path_score'] for score in scores.values()])
-    avg_workspace_score = np.mean([score['workspace_score'] for score in scores.values()])
-    std_workspace_score = np.std([score['workspace_score'] for score in scores.values()])
-    avg_covered_area_fraction = np.mean([score['covered_area_fraction'] for score in scores.values()])
-    std_covered_area_fraction = np.std([score['covered_area_fraction'] for score in scores.values()])
+    # exclude unsuccessful cases
+    successful_scores = {k: v for k, v in scores.items() if v['success']}
+    avg_path_score = np.mean([score['path_score'] for score in successful_scores.values()])
+    std_path_score = np.std([score['path_score'] for score in successful_scores.values()])
+    avg_workspace_score = np.mean([score['workspace_score'] for score in successful_scores.values()])
+    std_workspace_score = np.std([score['workspace_score'] for score in successful_scores.values()])
+    avg_covered_area_fraction = np.mean([score['covered_area_fraction'] for score in successful_scores.values()])
+    std_covered_area_fraction = np.std([score['covered_area_fraction'] for score in successful_scores.values()])
     summary = {'num_cases': num_cases, 'success_percentage': success_percentage, 'avg_path_score': avg_path_score,
                'std_path_score': std_path_score, 'avg_workspace_score': avg_workspace_score,
                'std_workspace_score': std_workspace_score, 'avg_covered_area_fraction': avg_covered_area_fraction,
                'std_covered_area_fraction': std_covered_area_fraction}
     return summary
+
