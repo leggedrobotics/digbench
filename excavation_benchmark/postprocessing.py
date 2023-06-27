@@ -32,7 +32,6 @@ def generate_crops_terra(dataset_folder, wm, hm):
     # metadata_folder = Path(dataset_folder) / "metadata"
     for filename in tqdm(os.listdir(img_folder), desc="crops"):
         file_path = img_folder / filename
-        print(file_path)
         img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
 
@@ -53,13 +52,13 @@ def generate_crops_inverted_terra(dataset_folder, wm, hm):
     destination_folder = Path(dataset_folder) / "terra" / "crops_inverted" / f"{wm}x{hm}" /"images"
     destination_folder.mkdir(parents=True, exist_ok=True)
     # metadata_folder = Path(dataset_folder) / "metadata"
-    for filename in tqdm(os.listdir(img_folder), desc="crops"):
+    for filename in tqdm(os.listdir(img_folder), desc="crops_inverted"):
         file_path = img_folder / filename
         img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
         # Downsample to (wm, hm)
         img_down = skimage.measure.block_reduce(
-                img, (img.shape[0] // wm, img.shape[1] // hm), np.max, cval=255
+                img, (img.shape[0] // wm, img.shape[1] // hm), np.max, cval=220
             )
 
         # print(img.shape)
@@ -74,9 +73,66 @@ def generate_crops_inverted_terra(dataset_folder, wm, hm):
         img_terra = _convert_img_to_terra(img_down, dig_value=220, terrain_value=255)
         np.save(destination_folder / filename, img_terra)
 
+def generate_foundations_terra(dataset_folder, wm, hm):
+    img_folder = Path(dataset_folder) / "foundations" / "images"
+    destination_folder = Path(dataset_folder) / "terra" / "foundations" / f"{wm}x{hm}" /"images"
+    destination_folder.mkdir(parents=True, exist_ok=True)
+    # metadata_folder = Path(dataset_folder) / "metadata"
+    for filename in tqdm(os.listdir(img_folder), desc="foundations"):
+        file_path = img_folder / filename
+        img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+
+
+        # Downsample to (wm, hm)
+        img_down = skimage.measure.block_reduce(
+                img, (img.shape[0] // wm, img.shape[1] // hm), np.min, cval=255
+            )
+        # cv2.imshow("img", img)
+        # cv2.waitKey(0)
+        # cv2.imshow("img", img_down)
+        # cv2.waitKey(0)
+
+        # Convert to Terra bitmap convention
+        img_terra = _convert_img_to_terra(img_down, dig_value=0, terrain_value=255)
+        np.save(destination_folder / filename, img_terra)
+
+def generate_foundations_inverted_terra(dataset_folder, wm, hm):
+    img_folder = Path(dataset_folder) / "foundations_inverted" / "images"
+    destination_folder = Path(dataset_folder) / "terra" / "foundations_inverted" / f"{wm}x{hm}" /"images"
+    destination_folder.mkdir(parents=True, exist_ok=True)
+    # metadata_folder = Path(dataset_folder) / "metadata"
+    for filename in tqdm(os.listdir(img_folder), desc="foundations_inverted"):
+        file_path = img_folder / filename
+        img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+
+        # Downsample to (wm, hm)
+        img_down = skimage.measure.block_reduce(
+                img, (img.shape[0] // wm, img.shape[1] // hm), np.max, cval=220
+            )
+
+        # print(img.shape)
+        # print(img[:10, :10])
+        # print(img_down.shape)
+        # cv2.imshow("img", img)
+        # cv2.waitKey(0)
+        # cv2.imshow("img", img_down)
+        # cv2.waitKey(0)
+
+        # Convert to Terra bitmap convention
+        img_terra = _convert_img_to_terra(img_down, dig_value=220, terrain_value=255)
+        np.save(destination_folder / filename, img_terra)
+
+def generate_foundations_traversable_terra(dataset_folder, wm, hm):
+    print("NOT IMPLEMENTED, SKIPPING")
+
+
 def generate_dataset_terra_format(dataset_folder, wm, hm, div):
-    # generate_crops_terra(dataset_folder, wm, hm)
+    generate_crops_terra(dataset_folder, wm, hm)
     generate_crops_inverted_terra(dataset_folder, wm, hm)
+    generate_foundations_terra(dataset_folder, wm, hm)
+    generate_foundations_inverted_terra(dataset_folder, wm, hm)
+    generate_foundations_traversable_terra(dataset_folder, wm, hm)  # TODO
+
     # TODO add others
 
 if __name__ == "__main__":
