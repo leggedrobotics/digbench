@@ -2,14 +2,14 @@
 
 from setuptools import setup, find_packages
 
-package_name = 'excavation_benchmark'
+package_name = 'digbench'
 
 setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(),
     py_modules=[
-        'excavation_benchmark',
+        'digbench',
     ],
     install_requires=['setuptools']
 )
