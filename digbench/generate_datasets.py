@@ -1,5 +1,6 @@
 from digbench import openstreet
 from digbench import utils
+from digbench.procedural_trench import generate_trenches
 import os
 import shutil
 # set seed
@@ -179,9 +180,26 @@ def create_foundations(main_folder):
     utils.generate_empty_occupancy(dataset_folder, save_folder + "/occupancy")
 
 
+def create_procedural_trenches(main_folder, n_imgs, w, h):
+    save_folder = main_folder + "/trenches/images"
+    max_d = max(w, h)
+    min_d = min(w, h)
+    generate_trenches(
+        n_imgs,
+        w,
+        h,
+        (max(1,int(0.05*min_d)), max(1,int(0.1*min_d))),
+        (max(1, int(0.15*max_d)), max(1, int(0.4*max_d))),
+        (1, 3),
+        0.02,
+        2,
+        save_folder,
+        )
+
 if __name__ == '__main__':
     sizes = [(20, 40), (40, 80), (80, 160), (160, 320), (320, 640)]
     package_dir = os.path.dirname(os.path.abspath(__file__))
+    n_trenches = 200
     for size in sizes:
         dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
         download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
@@ -190,3 +208,4 @@ if __name__ == '__main__':
         create_exterior_foundations(dataset_folder)
         create_exterior_foundations_traversable(dataset_folder)
         create_foundations(dataset_folder)
+        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])
