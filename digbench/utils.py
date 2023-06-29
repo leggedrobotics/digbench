@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 
-from excavation_benchmark import terrain_generation
+from digbench import terrain_generation
 
 
 def shrink_obstacles(image: np.ndarray, shrink_factor: int = 1):
@@ -331,16 +331,20 @@ def generate_empty_occupancy(image_folder: str, save_folder: str):
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
     for filename in os.listdir(image_folder):
+        # only png
+        if not filename.endswith('.png'):
+            continue
         image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
         image = image / 255
         empty_image = 255 * np.ones(image.shape)
         cv2.imwrite(save_folder + '/' + filename, empty_image)
 
 
-def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20)):
+
+def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), max_size=(1920, 1080)):
     """
-    Goes through all the images, check the real size in the metadata and save the image only if it's bigger than
-    min_size. The min_size corresponds to the size of the whole image (same as reported in the metadata).
+    Goes through all the images, checks the real size in the metadata, and saves the image only if it's size is within
+    min_size and max_size. The sizes correspond to the size of the whole image (same as reported in the metadata).
     """
     # if the folder does not exist, create it
     if not os.path.exists(save_folder):
@@ -353,8 +357,9 @@ def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20)):
             metadata = json.load(json_file)
         # get the real size
         real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
-        if real_dimensions[0] > min_size[0] and real_dimensions[1] > min_size[1]:
+        if min_size[0] <= real_dimensions[0] <= max_size[0] and min_size[1] <= real_dimensions[1] <= max_size[1]:
             cv2.imwrite(save_folder + '/' + filename, image)
+
 
 
 def fill_holes(image: np.array):

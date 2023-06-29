@@ -1,11 +1,4 @@
-import osmnx as ox
-import matplotlib.pyplot as plt
-from PIL import Image
 import json
-
-from pyproj import Proj, transform
-import json
-
 import matplotlib.pyplot as plt
 import osmnx as ox
 import cv2
@@ -36,7 +29,10 @@ def get_building_shapes_from_OSM(north, south, east, west, option=1, save_folder
 
     # Fetch buildings from OSM\
     bbox = (north, south, east, west)
-    buildings = ox.geometries.geometries_from_bbox(*bbox, tags={'building': True})
+    try:
+        buildings = ox.features.features_from_bbox(*bbox, tags={'building': True})
+    except Exception as e:
+        return
     print("got buildings")
 
     # Define coordinate reference systems
@@ -56,14 +52,18 @@ def extract_crop(buildings, wgs84, utm, north, south, east, west, save_folder):
     # Convert the bounding box to UTM
     west_utm, south_utm = transform(wgs84, utm, west, south)
     east_utm, north_utm = transform(wgs84, utm, east, north)
-
+    print("width crop in meters", east_utm - west_utm)
+    print("height crop in meters", north_utm - south_utm)
     # Create a Polygon that represents the bounding box
     bbox_polygon = Polygon([(west_utm, south_utm), (east_utm, south_utm),
                             (east_utm, north_utm), (west_utm, north_utm)])
 
     # Count how many buildings have their centroid within the bounding box
-    buildings_in_bbox = sum(bbox_polygon.contains(Point(transform(wgs84, utm, *building.centroid.coords[0])))
-                            for building in buildings.geometry)
+    try:
+        buildings_in_bbox = sum(bbox_polygon.contains(Point(transform(wgs84, utm, *building.centroid.coords[0])))
+                                for building in buildings.geometry)
+    except Exception as e:
+        buildings_in_bbox = 0
 
     # Check the number of buildings. Return if less than 2.
     if buildings_in_bbox < 2:
@@ -220,49 +220,109 @@ import random
 from typing import Tuple
 
 
-def collect_random_crops(bbox: Tuple, scale_factor: float, save_folder: str):
+# def collect_random_crops_old(bbox: Tuple, crop_size: Tuple[float, float], save_folder: str):
+#     """
+#     Collects random crops of the map using get_building_shapes_from_OSM option 1.
+#     Select a random crop of inside the main bbox. The size of the random crop is expressed as a fraction
+#     of the total bbox size by scale_factor.
+#
+#     Parameters:
+#     bbox (Tuple): Bounding box coordinates (north, south, east, west).
+#     scale_factor (float): Scale factor to determine the size of the random crop.
+#
+#     Returns:
+#     None
+#     """
+#     # Load the metadata file to obtain real dimensions
+#     # Convert total bounds to UTM
+#     height = bbox[0] - bbox[1]
+#     width = bbox[3] - bbox[2]
+#
+#     # Calculate the size of the random crop
+#     # crop_length = height * scale_factor[0]
+#     # crop_width = width * scale_factor[1]
+#     # check that the aspect ratio is the same as the original
+#     # if crop_length / crop_width != length / width:
+#     #     print("scale factor {}".format(scale_factor))
+#     #     print("original length {} and original width {}".format(length, width))
+#     #     raise ValueError("The aspect ratio of the random crop is different from the original {} {}".format(
+#     #         crop_length / crop_width, length / width
+#     #     ))
+#
+#     print("crop length {} and crop width {}".format(crop_length, crop_width))
+#
+#     # Calculate the range of valid crop positions
+#     # min_x = bbox[3] + crop_width
+#     # max_x = bbox[2] - crop_width
+#     # min_y = bbox[1] + crop_length
+#     # max_y = bbox[0] - crop_length
+#     north, south, east, west = bbox
+#
+#     # Generate random crop position
+#     random_x = random.uniform(south, max_x)
+#     random_y = random.uniform(min_y, max_y)
+#
+#     # Define the new crop bounding box
+#     crop_bbox = (
+#         random_y + crop_length,
+#         random_y - crop_length,
+#         random_x + crop_width,
+#         random_x - crop_width
+#     )
+#
+#
+#     # Call get_building_shapes_from_OSM with option 2 to save the random crop
+#     get_building_shapes_from_OSM(*crop_bbox, option=1, save_folder=save_folder)
+
+
+from pyproj import Proj, transform
+import random
+from typing import Tuple
+import os
+
+
+def collect_random_crops(outer_bbox_wgs84: Tuple, crop_size_utm: Tuple[float, float], save_folder: str):
     """
-    Collects random crops of the map using get_building_shapes_from_OSM option 1.
-    Select a random crop of inside the main bbox. The size of the random crop is expressed as a fraction
-    of the total bbox size by scale_factor.
+    Creates a random crop in wgs84 coordinates and using the outer_bbox_wgs84 as a boundary and the crops_size_utm in meters
+    as the size of the crop.
 
-    Parameters:
-    bbox (Tuple): Bounding box coordinates (north, south, east, west).
-    scale_factor (float): Scale factor to determine the size of the random crop.
-
-    Returns:
-    None
+    Args:
+        outer_bbox_wgs84: (north, south, east, west)
+        crop_size_utm: (width, height)
+        save_folder: str
     """
-    # Load the metadata file to obtain real dimensions
-    # Convert total bounds to UTM
-    length = bbox[1] - bbox[0]
-    width = bbox[3] - bbox[2]
+    north, south, east, west = outer_bbox_wgs84
+    width_crop, height_crop = crop_size_utm
 
-    # Calculate the size of the random crop
-    crop_length = length * scale_factor
-    crop_width = width * scale_factor
+    utm = Proj('EPSG:32633')  # UTM zone 33N (covers central Europe)
+    wgs84 = Proj('EPSG:4326')  # WGS84 (covers the entire globe)
 
-    # Calculate the range of valid crop positions
-    min_x = bbox[3] + crop_width
-    max_x = bbox[2] - crop_width
-    min_y = bbox[1] + crop_length
-    max_y = bbox[0] - crop_length
+    west_utm, south_utm = transform(wgs84, utm, west, south)
+    east_utm, north_utm = transform(wgs84, utm, east, north)
 
-    # Generate random crop position
-    random_x = random.uniform(min_x, max_x)
-    random_y = random.uniform(min_y, max_y)
+    # Get width and height of the outer box in UTM coordinates
+    width_utm = east_utm - west_utm
+    height_utm = north_utm - south_utm
 
-    # Define the new crop bounding box
-    crop_bbox = (
-        random_y + crop_length,
-        random_y - crop_length,
-        random_x + crop_width,
-        random_x - crop_width
-    )
+    # Choose a random point within the UTM coordinate box as the lower left corner of the new box
+    west_crop = west_utm + random.uniform(0, width_utm - width_crop)
+    south_crop = south_utm + random.uniform(0, height_utm - height_crop)
 
-    # Call get_building_shapes_from_OSM with option 2 to save the random crop
-    get_building_shapes_from_OSM(*crop_bbox, option=1, save_folder=save_folder)
+    # Create a new box with the given size around this point
+    east_crop = west_crop + width_crop
+    north_crop = south_crop + height_crop
 
+    # Convert the UTM coordinates of this box back to WGS84 coordinates
+    west_wgs84, south_wgs84 = transform(utm, wgs84, west_crop, south_crop)
+    east_wgs84, north_wgs84 = transform(utm, wgs84, east_crop, north_crop)
+
+    crop_wgs84 = (north_wgs84, south_wgs84, east_wgs84, west_wgs84)
+
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
+    # Call the get_building_shapes_from_OSM function with these new coordinates and the given save folder
+    get_building_shapes_from_OSM(*crop_wgs84, option=1, save_folder=save_folder)
 
 
 if __name__ == "__main__":
