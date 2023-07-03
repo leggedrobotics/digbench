@@ -2,16 +2,8 @@ import numpy as np
 import cv2
 import os
 from pathlib import Path
-
-# TODO replace with shared dict
-color_dict = {
-    "neutral": [220, 220, 220],
-    "digging": [255, 255, 255],
-    # "digging": [0,0,0],
-}
-
-def _get_img_mask(img, color_triplet):
-    return (img[..., 0] == color_triplet[0]) * (img[..., 1] == color_triplet[1]) * (img[..., 2] == color_triplet[2])
+from digbench.utils import color_dict
+from digbench.utils import _get_img_mask
 
 def generate_trenches(n_imgs, w, h, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option, save_folder=None):
     """

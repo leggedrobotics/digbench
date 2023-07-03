@@ -172,12 +172,12 @@ def create_exterior_foundations_traversable(main_folder):
 def create_foundations(main_folder):
     dataset_folder = main_folder + '/foundations_filtered_padded_resized'
     save_folder = main_folder + '/foundations'
-    inverted_image_folder = save_folder + '/images'
-    utils.invert_dataset(dataset_folder, inverted_image_folder)
-    # copy metadata folder to save folder and change its name to metadata
-    utils.copy_metadata(dataset_folder, save_folder + '/metadata')
-    # generate empty occupancy
-    utils.generate_empty_occupancy(dataset_folder, save_folder + "/occupancy")
+    utils.invert_dataset_apply_dump_foundations(dataset_folder, save_folder)
+    for level in ["easy", "medium", "hard"]:
+        # copy metadata folder to save folder and change its name to metadata
+        utils.copy_metadata(dataset_folder, save_folder + f'/{level}/metadata')
+        # generate empty occupancy
+        utils.generate_empty_occupancy(dataset_folder, save_folder + f"/{level}/occupancy")
 
 
 def create_procedural_trenches(main_folder, n_imgs, w, h):
@@ -203,10 +203,10 @@ if __name__ == '__main__':
     n_trenches = 200
     for size in sizes:
         dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
-        download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
-        create_city_crops(dataset_folder)
+        # download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
+        # create_city_crops(dataset_folder)
         download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
-        create_exterior_foundations(dataset_folder)
-        create_exterior_foundations_traversable(dataset_folder)
+        # create_exterior_foundations(dataset_folder)
+        # create_exterior_foundations_traversable(dataset_folder)
         create_foundations(dataset_folder)
-        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])
+        # create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])

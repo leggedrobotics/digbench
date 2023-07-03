@@ -2,8 +2,19 @@ import os
 import shutil
 
 import numpy as np
+from pathlib import Path
 
 from digbench import terrain_generation
+
+color_dict = {
+    "neutral": [220, 220, 220],
+    "digging": [255, 255, 255],
+    "dumping": [90, 191, 20],
+}
+
+
+def _get_img_mask(img, color_triplet):
+    return (img[..., 0] == color_triplet[0]) * (img[..., 1] == color_triplet[1]) * (img[..., 2] == color_triplet[2])
 
 
 def shrink_obstacles(image: np.ndarray, shrink_factor: int = 1):
@@ -320,6 +331,59 @@ def invert_dataset(image_folder, image_inverted_folder):
         cv2.imwrite(inverted_image_path, inverted_image)
 
         print(f"Image '{filename}' inverted successfully.")
+
+
+def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
+    """
+    This function inverts the color of the images in the image folder.
+    Also, it applies 3 different dump patterns (easy, medium, hard),
+    and saves the image to 3 different subfolders of image_inverted_folder.
+    """
+    # Create the inverted folder if it doesn't exist
+    if not os.path.exists(image_inverted_folder):
+        os.makedirs(image_inverted_folder)
+
+    # Iterate over the images in the image folder
+    for filename in os.listdir(image_folder):
+        image_path = os.path.join(image_folder, filename)
+
+        # Read the image using OpenCV
+        image = cv2.imread(image_path)
+
+        # Check if image is None or has no shape
+        if image is None or image.shape[0] is None or image.shape[1] is None:
+            print(f"Unable to read or process image '{filename}'. Skipping...")
+            continue
+
+        # Invert the image using the invert_map function
+        inverted_image = terrain_generation.invert_map(image)
+
+        # Apply 3 dumping levels
+        for level in ["easy", "medium", "hard"]:
+            if level == "easy":
+                img = np.where(
+                    _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]),
+                    np.array(color_dict["dumping"], dtype=inverted_image.dtype)[None, None].repeat(inverted_image.shape[0], 0).repeat(inverted_image.shape[1], 1),
+                    inverted_image
+                )
+            elif level == "medium":
+                img = np.where(
+                    _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]) * 
+                    (np.arange(inverted_image.shape[0])[:, None, None].repeat(inverted_image.shape[1], 1).repeat(3, -1) < inverted_image.shape[0] // 2),
+                    np.array(color_dict["dumping"], dtype=inverted_image.dtype)[None, None].repeat(inverted_image.shape[0], 0).repeat(inverted_image.shape[1], 1),
+                    inverted_image
+                )
+            elif level == "hard":
+                img = np.ones((int(1.2*inverted_image.shape[0]), int(1.2*inverted_image.shape[1]), 3)) * color_dict["dumping"]
+                img[int(0.1*inverted_image.shape[0]):int(0.1*inverted_image.shape[0]) + inverted_image.shape[0],
+                    int(0.1*inverted_image.shape[1]):int(0.1*inverted_image.shape[1]) + inverted_image.shape[1]] = inverted_image
+            # Save the inverted image to the inverted folder
+            p = Path(f"{image_inverted_folder}/{level}/images")
+            p.mkdir(parents=True, exist_ok=True)
+            inverted_image_path = p / filename
+            cv2.imwrite(str(inverted_image_path), img.astype(np.uint8))
+
+        print(f"Foundations '{filename}' created successfully.")
 
 
 def generate_empty_occupancy(image_folder: str, save_folder: str):
