@@ -181,20 +181,21 @@ def create_foundations(main_folder):
 
 
 def create_procedural_trenches(main_folder, n_imgs, w, h):
-    save_folder = main_folder + "/trenches/images"
     max_d = max(w, h)
     min_d = min(w, h)
-    generate_trenches(
-        n_imgs,
-        w,
-        h,
-        (max(1,int(0.05*min_d)), max(1,int(0.1*min_d))),
-        (max(1, int(0.15*max_d)), max(1, int(0.4*max_d))),
-        (1, 3),
-        0.02,
-        2,
-        save_folder,
-        )
+    for level, n_trenches in zip(["easy", "medium", "hard"], [(1, 1), (2, 2), (3, 3)]):
+        save_folder = main_folder + f"/trenches/{level}/images"
+        generate_trenches(
+            n_imgs,
+            w,
+            h,
+            (max(1,int(0.05*min_d)), max(1,int(0.1*min_d))),
+            (max(1, int(0.15*max_d)), max(1, int(0.4*max_d))),
+            n_trenches,
+            0.,
+            2,
+            save_folder,
+            )
 
 if __name__ == '__main__':
     sizes = [(20, 40), (40, 80), (80, 160), (160, 320), (320, 640)]
