@@ -1,5 +1,7 @@
 import os
 import cv2
+import skimage
+import json
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
@@ -19,11 +21,18 @@ def _convert_img_to_terra(img):
     return img.astype(np.int8)
 
 
-def _convert_all_imgs_to_terra(img_folder, destination_folder):
+def _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder):
     try:
         for filename in tqdm(os.listdir(img_folder), desc="crops"):
             file_path = img_folder / filename
             img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+            with open(str(metadata_folder) + f"/{filename.split('.png')[0]}.json") as json_file:
+                metadata = json.load(json_file)
+            real_w = int(metadata["real_dimensions"]["width"])
+            real_h = int(metadata["real_dimensions"]["height"])
+            img = skimage.measure.block_reduce(
+                img, (img.shape[0] // real_w, img.shape[1] // real_h), np.median, cval=255
+            )
             img_terra = _convert_img_to_terra(img)
             np.save(str(destination_folder / filename).split(".png")[0], img_terra)
     except Exception as e:
@@ -36,9 +45,10 @@ def generate_crops_terra(dataset_folder):
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "crops" / level / "images"
+        metadata_folder = Path(dataset_folder) / "crops" / level / "metadata"
         destination_folder = Path(dataset_folder) / "terra" / "crops" / level / "images"
         destination_folder.mkdir(parents=True, exist_ok=True)
-        _convert_all_imgs_to_terra(img_folder, destination_folder)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder)
     
 
 def generate_foundations_terra(dataset_folder):
@@ -46,9 +56,10 @@ def generate_foundations_terra(dataset_folder):
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "foundations" / level / "images"
+        metadata_folder = Path(dataset_folder) / "foundations" / level / "metadata"
         destination_folder = Path(dataset_folder) / "terra" / "foundations" / level / "images"
         destination_folder.mkdir(parents=True, exist_ok=True)
-        _convert_all_imgs_to_terra(img_folder, destination_folder)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder)
 
 
 def generate_crops_exterior_terra(dataset_folder):
@@ -56,9 +67,10 @@ def generate_crops_exterior_terra(dataset_folder):
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "crops_exterior" / level / "images"  # TODO is folder name correct?
+        metadata_folder = Path(dataset_folder) / "crops_exterior" / level / "metadata"
         destination_folder = Path(dataset_folder) / "terra" / "crops_exterior" / level / "images"  # TODO is folder name correct?
         destination_folder.mkdir(parents=True, exist_ok=True)
-        _convert_all_imgs_to_terra(img_folder, destination_folder)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder)
     
 
 def generate_foundations_exterior_terra(dataset_folder):
@@ -66,9 +78,10 @@ def generate_foundations_exterior_terra(dataset_folder):
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "foundations_exterior" / level / "images"  # TODO is folder name correct?
+        metadata_folder = Path(dataset_folder) / "foundations_exterior" / level / "metadata"
         destination_folder = Path(dataset_folder) / "terra" / "foundations_exterior" / level / "images"  # TODO is folder name correct?
         destination_folder.mkdir(parents=True, exist_ok=True)
-        _convert_all_imgs_to_terra(img_folder, destination_folder)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder)
 
 
 def generate_trenches_terra(dataset_folder):
@@ -76,9 +89,10 @@ def generate_trenches_terra(dataset_folder):
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "trenches" / level / "images"
+        metadata_folder = Path(dataset_folder) / "trenches" / level / "metadata"
         destination_folder = Path(dataset_folder) / "terra" / "trenches" / level / "images"
         destination_folder.mkdir(parents=True, exist_ok=True)
-        _convert_all_imgs_to_terra(img_folder, destination_folder)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder)
 
 
 def generate_dataset_terra_format(dataset_folder):
