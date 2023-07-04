@@ -87,7 +87,7 @@ def create_city_crops(main_folder):
 
 
 def download_foundations(main_folder, center_bbox = (47.378177, 47.364622, 8.526535, 8.544894), min_size=(20, 20),
-                         max_size=(100, 100), padding=3, resolution=0.2):
+                         max_size=(100, 100), padding=3, resolution=0.05):
     dataset_folder = main_folder + '/foundations_raw'
     # if it does not exist
     if not os.path.exists(dataset_folder):
@@ -221,4 +221,4 @@ if __name__ == '__main__':
         create_exterior_foundations(dataset_folder)
         create_exterior_foundations_traversable(dataset_folder)
         create_foundations(dataset_folder)
-        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=0.2)
+        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=0.05)
