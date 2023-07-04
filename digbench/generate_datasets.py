@@ -180,17 +180,15 @@ def create_foundations(main_folder):
         utils.generate_empty_occupancy(dataset_folder, save_folder + f"/{level}/occupancy")
 
 
-def create_procedural_trenches(main_folder, n_imgs, w, h):
-    max_d = max(w, h)
-    min_d = min(w, h)
+def create_procedural_trenches(main_folder, n_imgs, img_edge_min, img_edge_max):
     for level, n_trenches in zip(["easy", "medium", "hard"], [(1, 1), (2, 2), (3, 3)]):
         save_folder = main_folder + f"/trenches/{level}/images"
         generate_trenches(
             n_imgs,
-            w,
-            h,
-            (max(1,int(0.05*min_d)), max(1,int(0.1*min_d))),
-            (max(1, int(0.15*max_d)), max(1, int(0.4*max_d))),
+            img_edge_min,
+            img_edge_max,
+            (max(1,int(0.05*img_edge_min)), max(1,int(0.1*img_edge_max))),
+            (max(1, int(0.15*img_edge_min)), max(1, int(0.4*img_edge_max))),
             n_trenches,
             0.,
             2,

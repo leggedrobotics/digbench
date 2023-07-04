@@ -5,7 +5,7 @@ from pathlib import Path
 from digbench.utils import color_dict
 from digbench.utils import _get_img_mask
 
-def generate_trenches(n_imgs, w, h, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option, save_folder=None):
+def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option, save_folder=None):
     """
     option 1: visualize
     option 2: save to disk
@@ -16,6 +16,7 @@ def generate_trenches(n_imgs, w, h, sizes_small, sizes_long, n_edges, min_trench
     
     i = 0
     while i < n_imgs:
+        w, h = np.random.randint(img_edge_min, img_edge_max, (2,), dtype=np.int32)
         img = np.ones((w, h, 3)) * np.array(color_dict["neutral"])
         n_edges = np.random.randint(min_edges, max_edges + 1)
 
@@ -66,11 +67,11 @@ def generate_trenches(n_imgs, w, h, sizes_small, sizes_long, n_edges, min_trench
 
 if __name__ == "__main__":
     n_imgs = 10
-    w, h = 300, 600
+    img_edge_min, img_edge_max = 300, 600
     sizes_small = (15, 50)
     sizes_long = (100, 200)
     n_edges = (2, 2)
     min_trench_area_ratio = 0.02
     package_dir = os.path.dirname(os.path.abspath(__file__))
-    save_folder = package_dir + '/../data/openstreet/benchmark_' + str(w) + '_' + str(h)
-    generate_trenches(n_imgs, w, h, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option=1, save_folder=save_folder)
+    save_folder = package_dir + '/../data/openstreet/benchmark_' + str(img_edge_min) + '_' + str(img_edge_max)
+    generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option=1, save_folder=save_folder)
