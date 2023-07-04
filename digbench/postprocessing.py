@@ -14,10 +14,11 @@ def _convert_img_to_terra(img):
     to [-1, 0, 1] Terra convention.
     """
     img = img.astype(np.int16)
-    img = np.where(img == color_dict["digging"], -1, img)
-    img = np.where(img == color_dict["dumping"], 1, img)
-    img = np.where(img == color_dict["neutral"], 0, img)
+    img = np.where(img == np.array(color_dict["digging"]), -1, img)
+    img = np.where(img == np.array(color_dict["dumping"]), 1, img)
+    img = np.where(img == np.array(color_dict["neutral"]), 0, img)
     img = np.where((img != -1) & (img != 1), 0, img)
+    img = img[..., 0]  # take only 1 channel
     return img.astype(np.int8)
 
 
@@ -25,15 +26,15 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder):
     try:
         for i, filename in enumerate(tqdm(os.listdir(img_folder))):
             file_path = img_folder / filename
-            img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
+            img = cv2.imread(str(file_path))
             with open(str(metadata_folder) + f"/{filename.split('.png')[0]}.json") as json_file:
                 metadata = json.load(json_file)
             real_w = int(metadata["real_dimensions"]["width"])
             real_h = int(metadata["real_dimensions"]["height"])
-            img = skimage.measure.block_reduce(
-                img, (img.shape[0] // real_w, img.shape[1] // real_h), np.median, cval=255
+            img_downsampled = skimage.measure.block_reduce(
+                img, (img.shape[0] // real_w, img.shape[1] // real_h, 1), np.max, cval=255
             )
-            img_terra = _convert_img_to_terra(img)
+            img_terra = _convert_img_to_terra(img_downsampled)
             np.save(destination_folder / f"img_{i}", img_terra)
     except Exception as e:
         print(e)
