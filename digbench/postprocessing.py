@@ -24,7 +24,7 @@ def _convert_img_to_terra(img):
 
 def _convert_occupancy_to_terra(img):
     img = img.astype(np.int16)
-    img = np.where(img == 255, 1, 0)
+    img = np.where(img == 0, 1, 0)
     return img.astype(np.int8)
 
 def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, destination_folder, size):
