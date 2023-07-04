@@ -1,11 +1,12 @@
 import numpy as np
 import cv2
 import os
+import json
 from pathlib import Path
 from digbench.utils import color_dict
 from digbench.utils import _get_img_mask
 
-def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option, save_folder=None):
+def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, resolution, option, save_folder=None):
     """
     option 1: visualize
     option 2: save to disk
@@ -52,6 +53,9 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
         if _get_img_mask(img, color_dict["digging"]).sum() / (w*h) < min_trench_area_ratio:
             print("skipping...")
             continue
+        
+        # Set resolution
+        img = cv2.resize(img, (int(img.shape[0] // resolution), int(img.shape[1] // resolution)), interpolation=cv2.INTER_NEAREST)
 
         img = img.astype(np.uint8)
         i += 1
@@ -60,8 +64,13 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
             cv2.imshow("img", img)
             cv2.waitKey(0)
         elif option == 2:
-            Path(save_folder).mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(os.path.join(save_folder, "trench_" + str(i) + ".png"), img)
+            save_folder_images = Path(save_folder) / "images"
+            save_folder_metadata = Path(save_folder) / "metadata"
+            save_folder_images.mkdir(parents=True, exist_ok=True)
+            save_folder_metadata.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(os.path.join(save_folder_images, "trench_" + str(i) + ".png"), img)
+            with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
+                        json.dump({"real_dimensions": {"width": float(w), "height": float(h)}}, outfile)
         else:
             raise ValueError(f"Option {option} not supported.")
 
