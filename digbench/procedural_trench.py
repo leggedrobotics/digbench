@@ -66,9 +66,12 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
         elif option == 2:
             save_folder_images = Path(save_folder) / "images"
             save_folder_metadata = Path(save_folder) / "metadata"
+            save_folder_occupancy = Path(save_folder) / "occupancy"
             save_folder_images.mkdir(parents=True, exist_ok=True)
             save_folder_metadata.mkdir(parents=True, exist_ok=True)
+            save_folder_occupancy.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(os.path.join(save_folder_images, "trench_" + str(i) + ".png"), img)
+            cv2.imwrite(os.path.join(save_folder_occupancy, "trench_" + str(i) + ".png"), np.ones((img.shape[0], img.shape[1])) * 255)
             with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
                         json.dump({"real_dimensions": {"width": float(w), "height": float(h)}}, outfile)
         else:
