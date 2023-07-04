@@ -92,8 +92,12 @@ def download_foundations(main_folder, center_bbox = (47.378177, 47.364622, 8.526
     # if it does not exist
     if not os.path.exists(dataset_folder):
         os.makedirs(dataset_folder)
-        openstreet.get_building_shapes_from_OSM(*center_bbox, option=2,
-                                                       save_folder=dataset_folder)
+        try:
+            openstreet.get_building_shapes_from_OSM(*center_bbox, option=2,
+                                                        save_folder=dataset_folder)
+        except Exception as e:
+            print(e)
+
     # filter out small cases
     image_folder = main_folder + '/foundations_raw/images'
     save_folder = main_folder + '/foundations_filtered/images'
@@ -112,10 +116,16 @@ def download_foundations(main_folder, center_bbox = (47.378177, 47.364622, 8.526
     image_resized_folder = main_folder + '/foundations_filtered_padded_resized'
     utils.preprocess_dataset_fixed_resolution(image_folder, metadata_folder, image_resized_folder, resolution)
 
+    # filter out small cases again, after resizing and all
+    image_folder = main_folder + '/foundations_filtered_padded_resized'
+    save_folder = main_folder + '/foundations_filtered_padded_resized_refiltered'
+    metadata_folder = main_folder + '/foundations_filtered_padded_resized'
+    utils.size_filter(image_folder, save_folder, metadata_folder, min_size, max_size, copy_metadata=True)
+
 
 def create_exterior_foundations(main_folder, padding=5):
     # fill holes
-    image_folder = main_folder + '/foundations_filtered_padded_resized'
+    image_folder = main_folder + '/foundations_filtered_padded_resized_refiltered'
     dataset_folder = main_folder + '/exterior_foundations_filled'
     # make it if it doesn't exist
     os.makedirs(dataset_folder, exist_ok=True)
@@ -170,7 +180,7 @@ def create_exterior_foundations_traversable(main_folder):
 
 
 def create_foundations(main_folder):
-    dataset_folder = main_folder + '/foundations_filtered_padded_resized'
+    dataset_folder = main_folder + '/foundations_filtered_padded_resized_refiltered'
     save_folder = main_folder + '/foundations'
     utils.invert_dataset_apply_dump_foundations(dataset_folder, save_folder)
     for level in ["easy", "medium", "hard"]:
@@ -191,20 +201,24 @@ def create_procedural_trenches(main_folder, n_imgs, img_edge_min, img_edge_max, 
             (max(1, int(0.15*img_edge_min)), max(1, int(0.4*img_edge_max))),
             n_trenches,
             0.,
+            resolution,
             2,
             save_folder,
             )
 
 if __name__ == '__main__':
+    # Basel center_bbox = (47.5376, 47.6126, 7.5401, 7.6842)
+    # Basel center_bbox small = (47.5645, 47.572, 7.5867, 7.5979)
+    # Zurich center_bbox small (benchmark) = (47.378177, 47.364622, 8.526535, 8.544894)
     sizes = [(20, 40), (40, 80), (80, 160), (160, 320), (320, 640)]
     package_dir = os.path.dirname(os.path.abspath(__file__))
-    n_trenches = 200
+    n_trenches = 1000
     for size in sizes:
-        dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
-        download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
+        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
+        download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
         create_city_crops(dataset_folder)
-        download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
+        download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
         create_exterior_foundations(dataset_folder)
         create_exterior_foundations_traversable(dataset_folder)
         create_foundations(dataset_folder)
-        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])
+        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=0.2)

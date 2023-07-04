@@ -405,7 +405,7 @@ def generate_empty_occupancy(image_folder: str, save_folder: str):
 
 
 
-def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), max_size=(1920, 1080)):
+def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), max_size=(1920, 1080), copy_metadata=False):
     """
     Goes through all the images, checks the real size in the metadata, and saves the image only if it's size is within
     min_size and max_size. The sizes correspond to the size of the whole image (same as reported in the metadata).
@@ -416,13 +416,18 @@ def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), m
 
     # get the metadata
     for filename in os.listdir(image_folder):
-        image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
-        with open(metadata_folder + '/' + filename[:-4] + '.json') as json_file:
-            metadata = json.load(json_file)
-        # get the real size
-        real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
-        if min_size[0] <= real_dimensions[0] <= max_size[0] and min_size[1] <= real_dimensions[1] <= max_size[1]:
-            cv2.imwrite(save_folder + '/' + filename, image)
+        if filename.endswith(".png"):
+            image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
+            metadata_path = metadata_folder + '/' + filename[:-4] + '.json'
+            with open(metadata_path) as json_file:
+                metadata = json.load(json_file)
+            # get the real size
+            real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
+            if min_size[0] <= real_dimensions[0] <= max_size[0] and min_size[1] <= real_dimensions[1] <= max_size[1]:
+                cv2.imwrite(save_folder + '/' + filename, image)
+                if copy_metadata:
+                    with open(os.path.join(save_folder + '/' + filename[:-4] + '.json'), 'w') as outfile:
+                        json.dump(metadata, outfile)
 
 
 
