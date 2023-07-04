@@ -374,9 +374,12 @@ def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
                     inverted_image
                 )
             elif level == "hard":
-                img = np.ones((int(1.2*inverted_image.shape[0]), int(1.2*inverted_image.shape[1]), 3)) * color_dict["dumping"]
-                img[int(0.1*inverted_image.shape[0]):int(0.1*inverted_image.shape[0]) + inverted_image.shape[0],
-                    int(0.1*inverted_image.shape[1]):int(0.1*inverted_image.shape[1]) + inverted_image.shape[1]] = inverted_image
+                img = np.ones_like(inverted_image) * color_dict["dumping"]
+                start_x = int(0.1*inverted_image.shape[0])
+                end_x = int(0.1*inverted_image.shape[0]) + int(0.8*inverted_image.shape[0])
+                start_y = int(0.1*inverted_image.shape[1])
+                end_y = int(0.1*inverted_image.shape[1]) + int(0.8*inverted_image.shape[1])
+                img[start_x: end_x, start_y: end_y] = inverted_image[start_x: end_x, start_y: end_y]
             # Save the inverted image to the inverted folder
             p = Path(f"{image_inverted_folder}/{level}/images")
             p.mkdir(parents=True, exist_ok=True)
