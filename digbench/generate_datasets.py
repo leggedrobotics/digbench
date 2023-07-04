@@ -203,10 +203,10 @@ if __name__ == '__main__':
     n_trenches = 200
     for size in sizes:
         dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
-        # download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
-        # create_city_crops(dataset_folder)
+        download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
+        create_city_crops(dataset_folder)
         download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]))
-        # create_exterior_foundations(dataset_folder)
-        # create_exterior_foundations_traversable(dataset_folder)
+        create_exterior_foundations(dataset_folder)
+        create_exterior_foundations_traversable(dataset_folder)
         create_foundations(dataset_folder)
-        # create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])
+        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1])
