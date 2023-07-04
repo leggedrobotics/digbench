@@ -18,7 +18,7 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
     i = 0
     while i < n_imgs:
         w, h = np.random.randint(img_edge_min, img_edge_max, (2,), dtype=np.int32)
-        img = np.ones((w, h, 3)) * np.array(color_dict["neutral"])
+        img = np.ones((w, h, 3)) * np.array(color_dict["dumping"])
         n_edges = np.random.randint(min_edges, max_edges + 1)
 
         prev_horizontal = True if np.random.choice([0,1]).astype(np.bool_) else False

@@ -214,7 +214,7 @@ if __name__ == '__main__':
     package_dir = os.path.dirname(os.path.abspath(__file__))
     n_trenches = 1000
     for size in sizes:
-        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
+        dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
         download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
         create_city_crops(dataset_folder)
         download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
