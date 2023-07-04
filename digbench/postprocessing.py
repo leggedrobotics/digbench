@@ -23,7 +23,7 @@ def _convert_img_to_terra(img):
 
 def _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder):
     try:
-        for filename in tqdm(os.listdir(img_folder), desc="crops"):
+        for i, filename in enumerate(tqdm(os.listdir(img_folder))):
             file_path = img_folder / filename
             img = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
             with open(str(metadata_folder) + f"/{filename.split('.png')[0]}.json") as json_file:
@@ -34,7 +34,7 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, destination_folder):
                 img, (img.shape[0] // real_w, img.shape[1] // real_h), np.median, cval=255
             )
             img_terra = _convert_img_to_terra(img)
-            np.save(str(destination_folder / filename).split(".png")[0], img_terra)
+            np.save(destination_folder / f"img_{i}", img_terra)
     except Exception as e:
         print(e)
         print("skipping...\n")
@@ -104,8 +104,8 @@ def generate_dataset_terra_format(dataset_folder):
 
 
 if __name__ == "__main__":
-    sizes = [(20, 40), (40, 80), (80, 160), (160, 320), (320, 640)]
+    sizes = [(20, 40)]#, (40, 80), (80, 160), (160, 320), (320, 640)]
     package_dir = os.path.dirname(os.path.abspath(__file__))
     for size in sizes:
-        dataset_folder = package_dir + '/../data/openstreet/benchmark_' + str(size[0]) + '_' + str(size[1])
+        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
         generate_dataset_terra_format(dataset_folder)
