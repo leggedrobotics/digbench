@@ -5,8 +5,10 @@ import json
 from pathlib import Path
 from digbench.utils import color_dict
 from digbench.utils import _get_img_mask
+from scipy.signal import convolve2d
 
-def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, resolution, option, save_folder=None):
+
+def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, resolution, option, save_folder=None):
     """
     option 1: visualize
     option 2: save to disk
@@ -18,7 +20,7 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
     i = 0
     while i < n_imgs:
         w, h = np.random.randint(img_edge_min, img_edge_max, (2,), dtype=np.int32)
-        img = np.ones((w, h, 3)) * np.array(color_dict["dumping"])
+        img = np.ones((w, h, 3)) * np.array(color_dict["neutral"])
         n_edges = np.random.randint(min_edges, max_edges + 1)
 
         prev_horizontal = True if np.random.choice([0,1]).astype(np.bool_) else False
@@ -44,6 +46,11 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
             
             size_x = min(size_x, w-x)
             size_y = min(size_y, h-y)
+
+            if edge_i == 0:
+                 # save centroid x, y
+                 x_centroid = x + (size_x // 2)
+                 y_centroid = y + (size_y // 2)
             
             img[x:x+size_x, y:y+size_y] = np.array(color_dict["digging"])
 
@@ -54,12 +61,79 @@ def generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_lon
             print("skipping...")
             continue
         
+        # Get dumping constraints
+        if level == "medium":
+            side_constraints_medium = [
+                (np.arange(w) < x_centroid)[:, None].repeat(h, 1),
+                (np.arange(w) > x_centroid)[:, None].repeat(h, 1),
+                (np.arange(h) < y_centroid)[:, None].repeat(w, 1).T,
+                (np.arange(h) > y_centroid)[:, None].repeat(w, 1).T,
+            ]
+            medium_constraint = side_constraints_medium[i % 4]
+            medium_constraint = medium_constraint.astype(np.uint8)
+        elif level == "hard":
+            side_constraints_hard = [
+                (np.arange(w) < x_centroid)[:, None].repeat(h, 1) | (np.arange(h) < y_centroid)[:, None].repeat(w, 1).T,
+                (np.arange(w) < x_centroid)[:, None].repeat(h, 1) | (np.arange(h) > y_centroid)[:, None].repeat(w, 1).T,
+                (np.arange(w) > x_centroid)[:, None].repeat(h, 1) | (np.arange(h) < y_centroid)[:, None].repeat(w, 1).T,
+                (np.arange(w) > x_centroid)[:, None].repeat(h, 1) | (np.arange(h) > y_centroid)[:, None].repeat(w, 1).T,
+            ]
+            hard_constraint = side_constraints_hard[i % 4]
+            hard_constraint = hard_constraint.astype(np.uint8)
+        
+        
         # Set resolution
         img = cv2.resize(img, (int(img.shape[0] // resolution), int(img.shape[1] // resolution)), interpolation=cv2.INTER_NEAREST)
+        if level == "medium":
+            medium_constraint = cv2.resize(medium_constraint, (int(medium_constraint.shape[0] // resolution), int(medium_constraint.shape[1] // resolution)), interpolation=cv2.INTER_NEAREST)
+        elif level == "hard":
+            hard_constraint = cv2.resize(hard_constraint, (int(hard_constraint.shape[0] // resolution), int(hard_constraint.shape[1] // resolution)), interpolation=cv2.INTER_NEAREST)
 
         img = img.astype(np.uint8)
         i += 1
 
+        # Set contour based on level
+        img_black = np.where(
+            _get_img_mask(img[..., None].repeat(3, -1), color_dict["neutral"]),
+            0,
+            img
+        )
+        kernel_dim = int(min(img_black.shape[:2]) * 0.13)
+        kernel = np.ones((kernel_dim, kernel_dim))
+        expanded_img = convolve2d(img_black[..., 0], kernel, mode="same")
+        contoured_img = np.where(
+            (expanded_img > 0) & (img_black[..., 0] == 0),
+            1,
+            img_black[..., 0]
+        )
+        tmp = _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None] * color_dict["dumping"]
+        contoured_img = np.where(
+            _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None].repeat(3, -1),
+            tmp,
+            contoured_img[..., None].repeat(3, -1)
+        ).astype(np.uint8)
+        contoured_img = np.where(
+            contoured_img == 0,
+            color_dict["neutral"],
+            contoured_img
+        ).astype(np.uint8)
+
+        w, h, _ = contoured_img.shape
+        if level == "easy":
+            img = contoured_img
+        elif level == "medium":
+            img = np.where(
+                (_get_img_mask(contoured_img, color_dict["dumping"]) * medium_constraint)[..., None].repeat(3, -1),
+                np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+                contoured_img,
+            ).astype(np.uint8)
+        elif level == "hard":
+            img = np.where(
+                (_get_img_mask(contoured_img, color_dict["dumping"]) * hard_constraint)[..., None].repeat(3, -1),
+                np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+                contoured_img,
+            ).astype(np.uint8)
+        
         if option == 1:
             cv2.imshow("img", img)
             cv2.waitKey(0)
