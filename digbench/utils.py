@@ -373,7 +373,7 @@ def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
             0,
             inverted_image
         )
-        kernel_dim = int(min(inverted_image_black.shape[:2]) * 0.13)
+        kernel_dim = int(min(inverted_image_black.shape[:2]) * 0.25)
         kernel = np.ones((kernel_dim, kernel_dim))
         expanded_img = convolve2d(inverted_image_black[..., 0], kernel, mode="same")
         contoured_img = np.where(

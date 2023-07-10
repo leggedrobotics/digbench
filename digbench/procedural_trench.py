@@ -98,7 +98,7 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             0,
             img
         )
-        kernel_dim = int(min(img_black.shape[:2]) * 0.13)
+        kernel_dim = int(min(img_black.shape[:2]) * 0.25)
         kernel = np.ones((kernel_dim, kernel_dim))
         expanded_img = convolve2d(img_black[..., 0], kernel, mode="same")
         contoured_img = np.where(
