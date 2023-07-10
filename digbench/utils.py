@@ -360,6 +360,13 @@ def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
         # Invert the image using the invert_map function
         inverted_image = terrain_generation.invert_map(image)
 
+        # Fix image such that it only has color_dict colors
+        inverted_image = np.where(
+            (~(_get_img_mask(inverted_image, color_dict["digging"]) | _get_img_mask(inverted_image, color_dict["dumping"]) | _get_img_mask(inverted_image, color_dict["neutral"])))[..., None].repeat(3, -1),
+            np.array(color_dict["digging"])[None, None].repeat(inverted_image.shape[0], 0).repeat(inverted_image.shape[1], 1),
+            inverted_image
+        ).astype(inverted_image.dtype)
+
         # Get the outer profile of the image
         inverted_image_black = np.where(
             _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]),
