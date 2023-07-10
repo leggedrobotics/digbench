@@ -37,8 +37,8 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, de
             occupancy = cv2.imread(str(occupancy_path), cv2.IMREAD_GRAYSCALE)
             with open(str(metadata_folder) + f"/{filename.split('.png')[0]}.json") as json_file:
                 metadata = json.load(json_file)
-            real_w = int(metadata["real_dimensions"]["width"])
-            real_h = int(metadata["real_dimensions"]["height"])
+            real_h = int(metadata["real_dimensions"]["width"])  # flipped conventions
+            real_w = int(metadata["real_dimensions"]["height"])  # flipped conventions
             img_downsampled = skimage.measure.block_reduce(
                 img, (math.ceil(img.shape[0] / real_w), math.ceil(img.shape[1] / real_h), 1), np.max, cval=color_dict["neutral"][0]
             )
@@ -58,7 +58,9 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, de
             destination_folder_images.mkdir(parents=True, exist_ok=True)
             destination_folder_occupancy.mkdir(parents=True, exist_ok=True)
             np.save(destination_folder_images / f"img_{i}", img_terra_pad)
+            # np.save(destination_folder_images / filename[:-4], img_terra_pad)
             np.save(destination_folder_occupancy / f"img_{i}", img_terra_occupancy)
+            # np.save(destination_folder_occupancy / filename[:-4], img_terra_occupancy)
     except Exception as e:
         print(e)
         print("skipping...\n")
@@ -127,9 +129,9 @@ def generate_trenches_terra(dataset_folder, size):
 def generate_dataset_terra_format(dataset_folder, size):
     generate_foundations_terra(dataset_folder, size)
     generate_trenches_terra(dataset_folder, size)
-    generate_crops_terra(dataset_folder, size)
-    generate_crops_exterior_terra(dataset_folder, size)
-    generate_foundations_exterior_terra(dataset_folder, size)
+    # generate_crops_terra(dataset_folder, size)
+    # generate_crops_exterior_terra(dataset_folder, size)
+    # generate_foundations_exterior_terra(dataset_folder, size)
 
 
 if __name__ == "__main__":
