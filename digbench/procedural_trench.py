@@ -118,19 +118,19 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             contoured_img
         ).astype(np.uint8)
 
-        w, h, _ = contoured_img.shape
+        w1, h1, _ = contoured_img.shape
         if level == "easy":
             img = contoured_img
         elif level == "medium":
             img = np.where(
                 (_get_img_mask(contoured_img, color_dict["dumping"]) * medium_constraint)[..., None].repeat(3, -1),
-                np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+                np.array(color_dict["neutral"])[None, None].repeat(w1, 0).repeat(h1, 1),
                 contoured_img,
             ).astype(np.uint8)
         elif level == "hard":
             img = np.where(
                 (_get_img_mask(contoured_img, color_dict["dumping"]) * hard_constraint)[..., None].repeat(3, -1),
-                np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+                np.array(color_dict["neutral"])[None, None].repeat(w1, 0).repeat(h1, 1),
                 contoured_img,
             ).astype(np.uint8)
         
@@ -147,7 +147,7 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             cv2.imwrite(os.path.join(save_folder_images, "trench_" + str(i) + ".png"), img)
             cv2.imwrite(os.path.join(save_folder_occupancy, "trench_" + str(i) + ".png"), np.ones((img.shape[0], img.shape[1])) * 255)
             with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
-                        json.dump({"real_dimensions": {"width": float(w), "height": float(h)}}, outfile)
+                        json.dump({"real_dimensions": {"width": float(h), "height": float(w)}}, outfile)  # flipped convention
         else:
             raise ValueError(f"Option {option} not supported.")
 
