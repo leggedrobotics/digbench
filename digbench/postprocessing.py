@@ -45,6 +45,7 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, de
             occupancy_downsampled = skimage.measure.block_reduce(
                 occupancy, (math.ceil(occupancy.shape[0] / real_w), math.ceil(occupancy.shape[1] / real_h)), np.min, cval=0
             )
+            assert img_downsampled.shape[:-1] == occupancy_downsampled.shape
             img_terra = _convert_img_to_terra(img_downsampled)
             
             # Pad to max size
@@ -127,7 +128,7 @@ def generate_trenches_terra(dataset_folder, size):
 
 
 def generate_dataset_terra_format(dataset_folder, size):
-    generate_foundations_terra(dataset_folder, size)
+    # generate_foundations_terra(dataset_folder, size)
     generate_trenches_terra(dataset_folder, size)
     # generate_crops_terra(dataset_folder, size)
     # generate_crops_exterior_terra(dataset_folder, size)

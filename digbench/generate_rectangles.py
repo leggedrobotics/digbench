@@ -3,13 +3,17 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-def generate_rectangles(map_size, n_maps, destination_folder):
+def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpable):
     for i in tqdm(range(n_maps)):
         p = -np.ones((4, 2))
         while ~(np.all(p > 0) & np.all(p[:, 0] < map_size[0]) & np.all(p[:, 1] < map_size[1])):
             imgc = np.zeros((map_size[0], map_size[1], 3), np.uint8)
-            margin_x = int(0.3 * map_size[0])
-            margin_y = int(0.4 * map_size[1])
+            if small:
+                margin_x = int(0.4 * map_size[0])
+                margin_y = int(0.5 * map_size[1])
+            else:
+                margin_x = int(0.3 * map_size[0])
+                margin_y = int(0.4 * map_size[1])
 
             contour = 3
             x = np.array([margin_x, map_size[0] - margin_x])
@@ -33,9 +37,6 @@ def generate_rectangles(map_size, n_maps, destination_folder):
                     ],
                     dtype=np.int32
                 )
-                # cv2.drawContours(imgc, [p], 0, (155, 155, 155), -1, cv2.LINE_AA)
-                # cv2.imshow("image_raw",imgc)
-                # imgc = np.zeros((map_size[0], map_size[1], 3), np.uint8)
 
                 center = np.array([np.mean(x), np.mean(y)])
                 R = np.array(
@@ -60,6 +61,10 @@ def generate_rectangles(map_size, n_maps, destination_folder):
         imgc = imgc.astype(np.int32)[..., 2]
         img = np.where(imgc == 255, -1, imgc).astype(np.int8)
         img = np.where(img == 120, 1, img).astype(np.int8)
+
+        if all_dumpable:
+            img = np.where(img == 0, 1, img).astype(np.int8)
+
         occ = np.zeros_like(img)
         Path(destination_folder + "/images").mkdir(parents=True, exist_ok=True)
         Path(destination_folder + "/occupancy").mkdir(parents=True, exist_ok=True)
@@ -67,7 +72,7 @@ def generate_rectangles(map_size, n_maps, destination_folder):
         np.save(f"{destination_folder}/occupancy/img_{i}", occ)
 
 if __name__ == "__main__":
-    map_size = (20, 20)
+    map_size = (60, 60)
     n_maps = 1000
-    destination_folder = "/home/antonio/thesis/digbench/data/openstreet/train/benchmark_20_20/terra/rectangles"
-    generate_rectangles(map_size, n_maps, destination_folder)
+    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/rectangles"
+    generate_rectangles(map_size, n_maps, destination_folder, small=False, all_dumpable=True)
