@@ -10,7 +10,7 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
             imgc = np.zeros((map_size[0], map_size[1], 3), np.uint8)
             if small:
                 margin_x = int(0.4 * map_size[0])
-                margin_y = int(0.5 * map_size[1])
+                margin_y = int(0.48 * map_size[1])
             else:
                 margin_x = int(0.3 * map_size[0])
                 margin_y = int(0.4 * map_size[1])
@@ -74,5 +74,5 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
 if __name__ == "__main__":
     map_size = (60, 60)
     n_maps = 1000
-    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/rectangles"
-    generate_rectangles(map_size, n_maps, destination_folder, small=False, all_dumpable=True)
+    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/small-rectangles"
+    generate_rectangles(map_size, n_maps, destination_folder, small=True, all_dumpable=True)
