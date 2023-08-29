@@ -191,8 +191,7 @@ def create_foundations(main_folder):
 
 
 def create_procedural_trenches(main_folder, n_imgs, img_edge_min, img_edge_max, resolution):
-    # for level, n_trenches in zip(["easy", "medium", "hard"], [(1, 1), (2, 2), (3, 3)]):
-    for level, n_trenches in zip(["easy"], [(1, 1), (2, 2), (3, 3)]):
+    for level, n_trenches in zip(["easy", "medium", "hard"], [(1, 1), (2, 2), (3, 3)]):
         save_folder = main_folder + f"/trenches/{level}"
         generate_trenches(
             level,
@@ -214,7 +213,7 @@ if __name__ == '__main__':
     # Zurich center_bbox small (benchmark) = (47.378177, 47.364622, 8.526535, 8.544894)
     sizes = [(60, 61)]  #, (40, 80), (80, 160), (160, 320), (320, 640)]
     package_dir = os.path.dirname(os.path.abspath(__file__))
-    n_trenches = 10
+    n_trenches = 1000
     for size in sizes:
         dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
         # download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))

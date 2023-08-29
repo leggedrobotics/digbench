@@ -26,89 +26,104 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
     
     i = 0
     while i < n_imgs:
-        w, h = np.random.randint(img_edge_min, img_edge_max, (2,), dtype=np.int32)
-        img = np.ones((w, h, 3)) * np.array(color_dict["neutral"])
-        n_edges = np.random.randint(min_edges, max_edges + 1)
+        
+        not_good_trench = True
+        while not_good_trench:
+            w, h = np.random.randint(img_edge_min, img_edge_max, (2,), dtype=np.int32)
+            img = np.ones((w, h, 3)) * np.array(color_dict["neutral"])
+            n_edges = np.random.randint(min_edges, max_edges + 1)
 
-        prev_horizontal = True if np.random.choice([0,1]).astype(np.bool_) else False
+            prev_horizontal = True if np.random.choice([0,1]).astype(np.bool_) else False
 
-        lines_abc = []
-        lines_pts = []
-        for edge_i in range(n_edges):
-            if edge_i == 0:
-                mask = np.ones_like(img[..., 0], dtype=np.bool_)
-            fmask = mask.reshape(-1)
-            fmask_idx_set = list(set((np.arange(w*h) * fmask).tolist()))[1:]  # remove idx 0 as it's always going to be present
-            fidxs = np.array(fmask_idx_set)
-            idx = np.random.choice(fidxs)
-            x = idx // h
-            y = idx % h
-            size_small = np.random.randint(min_ssmall, max_ssmall + 1)
-            size_long = np.random.randint(min_slong, max_slong + 1)
-            if prev_horizontal:
-                size_x = size_long
-                size_y = size_small
+            lines_abc = []
+            lines_pts = []
+            for edge_i in range(n_edges):
+                if edge_i == 0:
+                    mask = np.ones_like(img[..., 0], dtype=np.bool_)
+                fmask = mask.reshape(-1)
+                fmask_idx_set = list(set((np.arange(w*h) * fmask).tolist()))[1:]  # remove idx 0 as it's always going to be present
+                fidxs = np.array(fmask_idx_set)
+                idx = np.random.choice(fidxs)
+                x = idx // h
+                y = idx % h
+                size_small = np.random.randint(min_ssmall, max_ssmall + 1)
+                size_long = np.random.randint(min_slong, max_slong + 1)
+                if prev_horizontal:
+                    size_x = size_long
+                    size_y = size_small
 
-                # Compute axes
-                y_coord = (2 * y + size_y - 1) / 2
-                axis_pt1 = (float(y_coord), float(x))
-                axis_pt2 = (float(y_coord), float(x) + size_x - 1)
+                    # Compute axes
+                    y_coord = (2 * y + size_y - 1) / 2
+                    axis_pt1 = (float(y_coord), float(x))
+                    axis_pt2 = (float(y_coord), float(x) + size_x - 1)
+                else:
+                    size_x = size_small
+                    size_y = size_long
+
+                    # Compute axes
+                    x_coord = (2 * x + size_x - 1) / 2
+                    axis_pt1 = (float(y), float(x_coord))
+                    axis_pt2 = (float(y) + size_y - 1, float(x_coord))
+                prev_horizontal = not prev_horizontal
+                lines_pts.append([axis_pt1, axis_pt2])
+                # print(f"{axis_pt1=}, {axis_pt2=}")
+                
+                size_x = min(size_x, w-x)
+                size_y = min(size_y, h-y)
+
+                if edge_i == 0:
+                    # save centroid x, y
+                    x_centroid = x + (size_x // 2)
+                    y_centroid = y + (size_y // 2)
+                
+                img[x:x+size_x, y:y+size_y] = np.array(color_dict["digging"])
+                
+                A = axis_pt2[1] - axis_pt1[1]
+                B = axis_pt1[0] - axis_pt2[0]
+                C = axis_pt2[0] * axis_pt1[1] - axis_pt1[0] * axis_pt2[1]
+                lines_abc.append(
+                    {
+                        "A": float(A),
+                        "B": float(B),
+                        "C": float(C),
+                    }
+                )
+
+                # if edge_i == n_edges - 1:
+                #     agent_x = np.random.randint(0, img.shape[0])
+                #     agent_y = np.random.randint(0, img.shape[1])
+                #     agent_pos = np.stack((agent_x, agent_y))
+                #     print(f"{agent_pos=}")
+
+                #     canvas = img.astype(np.uint8)
+                #     cv2.circle(canvas, agent_pos, radius=2, color=(0,0,0), thickness=1)
+                #     distances = []
+                #     for _, (pts, abc) in enumerate(zip(lines_pts, lines_abc)):
+                #         cv2.line(canvas, np.array(pts[0]).astype(np.int32), np.array(pts[1]).astype(np.int32), (0, 0, 0), thickness=1)
+
+                #         distance = distance_point_to_line(agent_pos[0], agent_pos[1], abc["A"], abc["B"], abc["C"])
+                #         distances.append(distance)
+                #     min_distance = min(distances)
+                #     print(f"{min_distance=}")
+
+                #     import matplotlib.pyplot as plt
+                #     plt.imshow(canvas, interpolation="none")
+                #     plt.show()
+
+                mask = np.zeros_like(img[..., 0], dtype=np.bool_)
+                mask[x:x+size_x, y:y+size_y] = np.ones((size_x, size_y), dtype=np.bool_)
+
+            ixts = img.shape[0]
+            iyts = img.shape[1]
+            ixt = int(ixts * 0.05)
+            iyt = int(iyts * 0.05)
+            img_test = img.copy()
+            img_test[ixt:ixts-ixt, iyt:iyts-iyt] = np.array(color_dict["neutral"])
+            if np.any(_get_img_mask(img_test, color_dict["digging"])):
+                print("Trench on the border, skipping...")
+                continue
             else:
-                size_x = size_small
-                size_y = size_long
-
-                # Compute axes
-                x_coord = (2 * x + size_x - 1) / 2
-                axis_pt1 = (float(y), float(x_coord))
-                axis_pt2 = (float(y) + size_y - 1, float(x_coord))
-            prev_horizontal = not prev_horizontal
-            lines_pts.append([axis_pt1, axis_pt2])
-            # print(f"{axis_pt1=}, {axis_pt2=}")
-            
-            size_x = min(size_x, w-x)
-            size_y = min(size_y, h-y)
-
-            if edge_i == 0:
-                 # save centroid x, y
-                 x_centroid = x + (size_x // 2)
-                 y_centroid = y + (size_y // 2)
-            
-            img[x:x+size_x, y:y+size_y] = np.array(color_dict["digging"])
-            
-            A = axis_pt2[1] - axis_pt1[1]
-            B = axis_pt1[0] - axis_pt2[0]
-            C = axis_pt2[0] * axis_pt1[1] - axis_pt1[0] * axis_pt2[1]
-            lines_abc.append(
-                {
-                    "A": float(A),
-                    "B": float(B),
-                    "C": float(C),
-                }
-            )
-
-            # if edge_i == n_edges - 1:
-            #     agent_x = np.random.randint(0, img.shape[0])
-            #     agent_y = np.random.randint(0, img.shape[1])
-            #     agent_pos = np.stack((agent_x, agent_y))
-            #     print(f"{agent_pos=}")
-
-            #     canvas = img.astype(np.uint8)
-            #     cv2.circle(canvas, agent_pos, radius=2, color=(0,0,0), thickness=1)
-            #     distances = []
-            #     for _, (pts, abc) in enumerate(zip(lines_pts, lines_abc)):
-            #         cv2.line(canvas, np.array(pts[0]).astype(np.int32), np.array(pts[1]).astype(np.int32), (0, 0, 0), thickness=1)
-
-            #         distance = distance_point_to_line(agent_pos[0], agent_pos[1], abc["A"], abc["B"], abc["C"])
-            #         distances.append(distance)
-            #     min_distance = min(distances)
-            #     print(f"{min_distance=}")
-
-            #     import matplotlib.pyplot as plt
-            #     plt.imshow(canvas, interpolation="none")
-            #     plt.show()
-
-            mask = np.zeros_like(img[..., 0], dtype=np.bool_)
-            mask[x:x+size_x, y:y+size_y] = np.ones((size_x, size_y), dtype=np.bool_)
+                break
 
         # continue
 
@@ -209,6 +224,7 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             cv2.imwrite(os.path.join(save_folder_occupancy, "trench_" + str(i) + ".png"), np.ones((img.shape[0], img.shape[1])) * 255)
             with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
                 json.dump(metadata, outfile)  # flipped convention
+            print(f"Generated trench {i}")
         else:
             raise ValueError(f"Option {option} not supported.")
 
