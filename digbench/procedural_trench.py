@@ -51,18 +51,19 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
 
                 # Compute axes
                 y_coord = (2 * y + size_y - 1) / 2
-                axis_pt1 = (y_coord, x)
-                axis_pt2 = (y_coord, x + size_x - 1)
+                axis_pt1 = (float(y_coord), float(x))
+                axis_pt2 = (float(y_coord), float(x) + size_x - 1)
             else:
                 size_x = size_small
                 size_y = size_long
 
                 # Compute axes
                 x_coord = (2 * x + size_x - 1) / 2
-                axis_pt1 = (y, x_coord)
-                axis_pt2 = (y + size_y - 1, x_coord)
+                axis_pt1 = (float(y), float(x_coord))
+                axis_pt2 = (float(y) + size_y - 1, float(x_coord))
             prev_horizontal = not prev_horizontal
             lines_pts.append([axis_pt1, axis_pt2])
+            # print(f"{axis_pt1=}, {axis_pt2=}")
             
             size_x = min(size_x, w-x)
             size_y = min(size_y, h-y)
@@ -92,22 +93,24 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             #     print(f"{agent_pos=}")
 
             #     canvas = img.astype(np.uint8)
-            #     cv2.circle(canvas, agent_pos, radius=2, color=(0,0,0), thickness=3)
+            #     cv2.circle(canvas, agent_pos, radius=2, color=(0,0,0), thickness=1)
             #     distances = []
             #     for _, (pts, abc) in enumerate(zip(lines_pts, lines_abc)):
-            #         cv2.line(canvas, np.array(pts[0]).astype(np.int32), np.array(pts[1]).astype(np.int32), (0, 0, 0), thickness=2)
+            #         cv2.line(canvas, np.array(pts[0]).astype(np.int32), np.array(pts[1]).astype(np.int32), (0, 0, 0), thickness=1)
 
             #         distance = distance_point_to_line(agent_pos[0], agent_pos[1], abc["A"], abc["B"], abc["C"])
             #         distances.append(distance)
             #     min_distance = min(distances)
             #     print(f"{min_distance=}")
 
-                # import matplotlib.pyplot as plt
-                # plt.imshow(canvas, interpolation="none")
-                # plt.show()
+            #     import matplotlib.pyplot as plt
+            #     plt.imshow(canvas, interpolation="none")
+            #     plt.show()
 
             mask = np.zeros_like(img[..., 0], dtype=np.bool_)
             mask[x:x+size_x, y:y+size_y] = np.ones((size_x, size_y), dtype=np.bool_)
+
+        # continue
 
         if _get_img_mask(img, color_dict["digging"]).sum() / (w*h) < min_trench_area_ratio:
             print("skipping...")
@@ -192,7 +195,8 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
         elif option == 2:
             metadata = {
                 "real_dimensions": {"width": float(h), "height": float(w)},
-                "axes_ABC": lines_abc
+                "axes_ABC": lines_abc,
+                "lines_pts": lines_pts,
             }
 
             save_folder_images = Path(save_folder) / "images"
@@ -204,7 +208,7 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             cv2.imwrite(os.path.join(save_folder_images, "trench_" + str(i) + ".png"), img)
             cv2.imwrite(os.path.join(save_folder_occupancy, "trench_" + str(i) + ".png"), np.ones((img.shape[0], img.shape[1])) * 255)
             with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
-                        json.dump(metadata, outfile)  # flipped convention
+                json.dump(metadata, outfile)  # flipped convention
         else:
             raise ValueError(f"Option {option} not supported.")
 
@@ -213,7 +217,7 @@ if __name__ == "__main__":
     img_edge_min, img_edge_max = 300, 600
     sizes_small = (15, 50)
     sizes_long = (100, 200)
-    n_edges = (3, 3)
+    n_edges = (2, 2)
     min_trench_area_ratio = 0.02
     package_dir = os.path.dirname(os.path.abspath(__file__))
     save_folder = package_dir + '/../data/openstreet/benchmark_' + str(img_edge_min) + '_' + str(img_edge_max)

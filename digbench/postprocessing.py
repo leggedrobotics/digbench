@@ -34,8 +34,16 @@ def _convert_occupancy_to_terra(img):
 def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, destination_folder, size, expansion_factor=1, all_dumpable=False):
     max_size = size[1]
     try:
-        for i, filename in enumerate(tqdm(os.listdir(img_folder))):
+        filename_start = sorted(os.listdir(img_folder))[0].split("_")[0]
+        for i in tqdm(range(len(os.listdir(img_folder)))):
+
+            # NOTE for the future: os.listdir does not load files in alphabetical order!
+            filename = filename_start + f"_{i+1}.png"
             file_path = img_folder / filename
+
+            # print(f"{i=}")
+            # print(f"{filename=}")
+
             occupancy_path = occupancy_folder / filename
             img = cv2.imread(str(file_path))
             occupancy = cv2.imread(str(occupancy_path), cv2.IMREAD_GRAYSCALE)
@@ -141,15 +149,15 @@ def generate_trenches_terra(dataset_folder, size, expansion_factor, all_dumpable
 
 def generate_dataset_terra_format(dataset_folder, size):
     # generate_foundations_terra(dataset_folder, size)
-    generate_trenches_terra(dataset_folder, size, expansion_factor=3, all_dumpable=True)
+    generate_trenches_terra(dataset_folder, size, expansion_factor=1, all_dumpable=True)
     # generate_crops_terra(dataset_folder, size)
     # generate_crops_exterior_terra(dataset_folder, size)
     # generate_foundations_exterior_terra(dataset_folder, size)
 
 
 if __name__ == "__main__":
-    sizes = [(20, 20)]#, (40, 80), (80, 160), (160, 320), (320, 640)]
+    sizes = [(60, 60)]#, (40, 80), (80, 160), (160, 320), (320, 640)]
     package_dir = os.path.dirname(os.path.abspath(__file__))
     for size in sizes:
-        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_20_21'# + str(size[0]) + '_' + str(size[1])
+        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_60_61'# + str(size[0]) + '_' + str(size[1])
         generate_dataset_terra_format(dataset_folder, size)

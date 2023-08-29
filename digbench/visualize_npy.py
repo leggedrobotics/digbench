@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 package_dir = os.path.dirname(os.path.abspath(__file__))
-path = package_dir + '/../data/openstreet/train/benchmark_60_60/terra/small-rectangles/images/img_3.npy'
+path = package_dir + '/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/images/img_8.npy'
 m = np.load(path)
 print(m.shape)
 print(m)
