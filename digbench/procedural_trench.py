@@ -6,6 +6,13 @@ from pathlib import Path
 from digbench.utils import color_dict
 from digbench.utils import _get_img_mask
 from scipy.signal import convolve2d
+import math
+
+def distance_point_to_line(x, y, A, B, C):
+    numerator = abs(A*x + B*y + C)
+    denominator = math.sqrt(A**2 + B**2)
+    distance = numerator / denominator
+    return distance
 
 
 def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, resolution, option, save_folder=None):
@@ -25,6 +32,8 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
 
         prev_horizontal = True if np.random.choice([0,1]).astype(np.bool_) else False
 
+        lines_abc = []
+        lines_pts = []
         for edge_i in range(n_edges):
             if edge_i == 0:
                 mask = np.ones_like(img[..., 0], dtype=np.bool_)
@@ -39,10 +48,21 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             if prev_horizontal:
                 size_x = size_long
                 size_y = size_small
+
+                # Compute axes
+                y_coord = (2 * y + size_y - 1) / 2
+                axis_pt1 = (y_coord, x)
+                axis_pt2 = (y_coord, x + size_x - 1)
             else:
                 size_x = size_small
                 size_y = size_long
+
+                # Compute axes
+                x_coord = (2 * x + size_x - 1) / 2
+                axis_pt1 = (y, x_coord)
+                axis_pt2 = (y + size_y - 1, x_coord)
             prev_horizontal = not prev_horizontal
+            lines_pts.append([axis_pt1, axis_pt2])
             
             size_x = min(size_x, w-x)
             size_y = min(size_y, h-y)
@@ -53,6 +73,38 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
                  y_centroid = y + (size_y // 2)
             
             img[x:x+size_x, y:y+size_y] = np.array(color_dict["digging"])
+            
+            A = axis_pt2[1] - axis_pt1[1]
+            B = axis_pt1[0] - axis_pt2[0]
+            C = axis_pt2[0] * axis_pt1[1] - axis_pt1[0] * axis_pt2[1]
+            lines_abc.append(
+                {
+                    "A": float(A),
+                    "B": float(B),
+                    "C": float(C),
+                }
+            )
+
+            # if edge_i == n_edges - 1:
+            #     agent_x = np.random.randint(0, img.shape[0])
+            #     agent_y = np.random.randint(0, img.shape[1])
+            #     agent_pos = np.stack((agent_x, agent_y))
+            #     print(f"{agent_pos=}")
+
+            #     canvas = img.astype(np.uint8)
+            #     cv2.circle(canvas, agent_pos, radius=2, color=(0,0,0), thickness=3)
+            #     distances = []
+            #     for _, (pts, abc) in enumerate(zip(lines_pts, lines_abc)):
+            #         cv2.line(canvas, np.array(pts[0]).astype(np.int32), np.array(pts[1]).astype(np.int32), (0, 0, 0), thickness=2)
+
+            #         distance = distance_point_to_line(agent_pos[0], agent_pos[1], abc["A"], abc["B"], abc["C"])
+            #         distances.append(distance)
+            #     min_distance = min(distances)
+            #     print(f"{min_distance=}")
+
+                # import matplotlib.pyplot as plt
+                # plt.imshow(canvas, interpolation="none")
+                # plt.show()
 
             mask = np.zeros_like(img[..., 0], dtype=np.bool_)
             mask[x:x+size_x, y:y+size_y] = np.ones((size_x, size_y), dtype=np.bool_)
@@ -138,6 +190,11 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             cv2.imshow("img", img)
             cv2.waitKey(0)
         elif option == 2:
+            metadata = {
+                "real_dimensions": {"width": float(h), "height": float(w)},
+                "axes_ABC": lines_abc
+            }
+
             save_folder_images = Path(save_folder) / "images"
             save_folder_metadata = Path(save_folder) / "metadata"
             save_folder_occupancy = Path(save_folder) / "occupancy"
@@ -147,17 +204,17 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             cv2.imwrite(os.path.join(save_folder_images, "trench_" + str(i) + ".png"), img)
             cv2.imwrite(os.path.join(save_folder_occupancy, "trench_" + str(i) + ".png"), np.ones((img.shape[0], img.shape[1])) * 255)
             with open(os.path.join(save_folder_metadata, "trench_" + str(i) + '.json'), 'w') as outfile:
-                        json.dump({"real_dimensions": {"width": float(h), "height": float(w)}}, outfile)  # flipped convention
+                        json.dump(metadata, outfile)  # flipped convention
         else:
             raise ValueError(f"Option {option} not supported.")
 
 if __name__ == "__main__":
-    n_imgs = 10
+    n_imgs = 100
     img_edge_min, img_edge_max = 300, 600
     sizes_small = (15, 50)
     sizes_long = (100, 200)
-    n_edges = (2, 2)
+    n_edges = (3, 3)
     min_trench_area_ratio = 0.02
     package_dir = os.path.dirname(os.path.abspath(__file__))
     save_folder = package_dir + '/../data/openstreet/benchmark_' + str(img_edge_min) + '_' + str(img_edge_max)
-    generate_trenches(n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, option=1, save_folder=save_folder)
+    generate_trenches("easy", n_imgs, img_edge_min, img_edge_max, sizes_small, sizes_long, n_edges, min_trench_area_ratio, resolution=0.1, option=1, save_folder=save_folder)
