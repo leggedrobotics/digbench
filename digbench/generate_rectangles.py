@@ -15,11 +15,14 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
                 margin_x = int(0.3 * map_size[0])
                 margin_y = int(0.4 * map_size[1])
 
-            contour = 3
+            contour = 6
+            border = 3
             x = np.array([margin_x, map_size[0] - margin_x])
             y = np.array([margin_y, map_size[1] - margin_y])
             xc = np.array([margin_x - contour, map_size[0] - margin_x + contour])
             yc = np.array([margin_y - contour, map_size[1] - margin_y + contour])
+            xb = np.array([margin_x - border, map_size[0] - margin_x + border])
+            yb = np.array([margin_y - border, map_size[1] - margin_y + border])
             # x = np.random.randint(margin_x, map_size[0] - margin_x + 1, (2,))
             # y = np.random.randint(margin_y, map_size[1] - margin_y + 1, (2,))
 
@@ -51,7 +54,10 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
             theta = np.random.uniform(0, 2.*np.pi)
             p = get_rotated_rectangle(x, y, theta)
             pc = get_rotated_rectangle(xc, yc, theta)
+            pb = get_rotated_rectangle(xb, yb, theta)
             cv2.drawContours(imgc, [pc], 0, (120, 120, 120), -1, cv2.LINE_AA)
+            imgc = np.where(imgc != 0, 120, imgc)
+            cv2.drawContours(imgc, [pb], 0, (0, 0, 0), -1, cv2.LINE_AA)
             imgc = np.where(imgc != 0, 120, imgc)
             cv2.drawContours(imgc, [p], 0, (255, 255, 255), -1, cv2.LINE_AA)
             imgc = np.where((imgc != 0) & (imgc != 120), 255, imgc)
@@ -74,5 +80,5 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
 if __name__ == "__main__":
     map_size = (60, 60)
     n_maps = 1000
-    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/small-rectangles"
-    generate_rectangles(map_size, n_maps, destination_folder, small=True, all_dumpable=True)
+    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/small_rectangles_60"
+    generate_rectangles(map_size, n_maps, destination_folder, small=True, all_dumpable=False)

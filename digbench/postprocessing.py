@@ -137,6 +137,7 @@ def generate_foundations_exterior_terra(dataset_folder, size):
 
 def generate_trenches_terra(dataset_folder, size, expansion_factor, all_dumpable):
     print("Converting trenches...")
+    # for level in ["lev1-T-trenches-contour", "lev2-T-trenches-contour", "lev3-T-trenches-contour", "lev4-T-trenches-contour"]:
     for level in ["easy", "medium", "hard"]:
         print(f"    {level}...")
         img_folder = Path(dataset_folder) / "trenches" / level / "images"
@@ -149,7 +150,7 @@ def generate_trenches_terra(dataset_folder, size, expansion_factor, all_dumpable
 
 def generate_dataset_terra_format(dataset_folder, size):
     # generate_foundations_terra(dataset_folder, size)
-    generate_trenches_terra(dataset_folder, size, expansion_factor=1, all_dumpable=True)
+    generate_trenches_terra(dataset_folder, size, expansion_factor=1, all_dumpable=False)
     # generate_crops_terra(dataset_folder, size)
     # generate_crops_exterior_terra(dataset_folder, size)
     # generate_foundations_exterior_terra(dataset_folder, size)

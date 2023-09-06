@@ -168,7 +168,7 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             0,
             img
         )
-        kernel_dim = int(min(img_black.shape[:2]) * 0.25)
+        kernel_dim = int(min(img_black.shape[:2]) * 0.4)
         kernel = np.ones((kernel_dim, kernel_dim))
         expanded_img = convolve2d(img_black[..., 0], kernel, mode="same")
         contoured_img = np.where(
@@ -182,7 +182,33 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
             tmp,
             contoured_img[..., None].repeat(3, -1)
         ).astype(np.uint8)
+        contoured_img_dumping = np.where(
+            contoured_img == 0,
+            color_dict["neutral"],
+            contoured_img
+        ).astype(np.uint8)
+
+        # Set neutral contour
+        img_black = np.where(
+            _get_img_mask(img[..., None].repeat(3, -1), color_dict["neutral"]),
+            0,
+            img
+        )
+        kernel_dim = int(min(img_black.shape[:2]) * 0.13)
+        kernel = np.ones((kernel_dim, kernel_dim))
+        expanded_img = convolve2d(img_black[..., 0], kernel, mode="same")
         contoured_img = np.where(
+            (expanded_img > 0) & (img_black[..., 0] == 0),
+            1,
+            img_black[..., 0]
+        )
+        tmp = _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None] * ([el + 1 for el in color_dict["neutral"]])
+        contoured_img = np.where(
+            _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None].repeat(3, -1),
+            tmp,
+            contoured_img[..., None].repeat(3, -1)
+        ).astype(np.uint8)
+        contoured_img_neutral = np.where(
             contoured_img == 0,
             color_dict["neutral"],
             contoured_img
@@ -190,19 +216,33 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
 
         w1, h1, _ = contoured_img.shape
         if level == "easy":
-            img = contoured_img
+            img = np.where(
+                (_get_img_mask(contoured_img_neutral, [el + 1 for el in color_dict["neutral"]]))[..., None].repeat(3, -1),
+                contoured_img_neutral,
+                contoured_img_dumping
+            )
         elif level == "medium":
-            img = np.where(
-                (_get_img_mask(contoured_img, color_dict["dumping"]) * medium_constraint)[..., None].repeat(3, -1),
+            contoured_img_dumping = np.where(
+                (_get_img_mask(contoured_img_dumping, color_dict["dumping"]) * medium_constraint)[..., None].repeat(3, -1),
                 np.array(color_dict["neutral"])[None, None].repeat(w1, 0).repeat(h1, 1),
-                contoured_img,
+                contoured_img_dumping,
             ).astype(np.uint8)
+            img = np.where(
+                (_get_img_mask(contoured_img_neutral, [el + 1 for el in color_dict["neutral"]]))[..., None].repeat(3, -1),
+                contoured_img_neutral,
+                contoured_img_dumping
+            )
         elif level == "hard":
-            img = np.where(
-                (_get_img_mask(contoured_img, color_dict["dumping"]) * hard_constraint)[..., None].repeat(3, -1),
+            contoured_img_dumping = np.where(
+                (_get_img_mask(contoured_img_dumping, color_dict["dumping"]) * hard_constraint)[..., None].repeat(3, -1),
                 np.array(color_dict["neutral"])[None, None].repeat(w1, 0).repeat(h1, 1),
-                contoured_img,
+                contoured_img_dumping,
             ).astype(np.uint8)
+            img = np.where(
+                (_get_img_mask(contoured_img_neutral, [el + 1 for el in color_dict["neutral"]]))[..., None].repeat(3, -1),
+                contoured_img_neutral,
+                contoured_img_dumping
+            )
         
         if option == 1:
             cv2.imshow("img", img)
