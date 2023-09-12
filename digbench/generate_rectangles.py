@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpable):
-    for i in tqdm(range(n_maps)):
+    for i in tqdm(range(1, n_maps + 1)):
         p = -np.ones((4, 2))
         while ~(np.all(p > 0) & np.all(p[:, 0] < map_size[0]) & np.all(p[:, 1] < map_size[1])):
             imgc = np.zeros((map_size[0], map_size[1], 3), np.uint8)
@@ -80,5 +80,5 @@ def generate_rectangles(map_size, n_maps, destination_folder, small, all_dumpabl
 if __name__ == "__main__":
     map_size = (60, 60)
     n_maps = 1000
-    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/small_rectangles_60"
-    generate_rectangles(map_size, n_maps, destination_folder, small=True, all_dumpable=False)
+    destination_folder = f"/home/antonio/thesis/digbench/data/openstreet/train/benchmark_{map_size[0]}_{map_size[1]}/terra/rectangles_60"
+    generate_rectangles(map_size, n_maps, destination_folder, small=False, all_dumpable=False)

@@ -11,6 +11,8 @@ color_dict = {
     "neutral": [220, 220, 220],
     "digging": [255, 255, 255],
     "dumping": [90, 191, 20],
+    "nondumpable": [255, 0, 0],
+    "obstacle": [0, 0, 255],
 }
 
 
@@ -545,3 +547,10 @@ def copy_metadata(folder, target_folder):
             shutil.copy(folder + '/' + filename, target_folder + '/' + filename)
         else:
             continue
+
+def copy_metadata_individual(path_input, path_output, target_folder):
+    # if the folder does not exist, create it
+    if not os.path.exists(target_folder):
+        os.makedirs(target_folder)
+
+    shutil.copy(path_input, path_output)

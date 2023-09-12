@@ -2,13 +2,16 @@ import os
 import numpy as np
 import cv2
 
-i = np.random.randint(0, 100)
+i = np.random.randint(1, 1000)
 
 package_dir = os.path.dirname(os.path.abspath(__file__))
-path = package_dir + f'/../data/openstreet/train/benchmark_20_40/terra/foundations/hard/images/img_{i}.npy'
-# path = package_dir + f'/../data/openstreet/train/benchmark_60_60/terra/small_rectangles_60/images/img_{i}.npy'
+# path = package_dir + f'/../data/openstreet/train/benchmark_20_40/terra/foundations/hard/images/img_{i}.npy'
+# path = package_dir + f'/../data/openstreet/train/benchmark_20_40/terra/foundations/hard/occupancy/img_{i}.npy'
+# path = package_dir + f'/../data/openstreet/train/benchmark_60_60/terra/rectangles_60/images/img_{i}.npy'
 # path = package_dir + f'/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/images/img_{i}.npy'
-# path = package_dir + f'/../data/openstreet/train/squares_2/terra/images/img_{i}.npy'
+
+path = package_dir + f'/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/dumpability/img_{i}.npy'
+
 m = np.load(path)
 print(m.shape)
 print(m.max())
