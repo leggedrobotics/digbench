@@ -24,10 +24,10 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
     min_slong, max_slong = sizes_long
     min_edges, max_edges = n_edges
 
-    n_obs_min, n_obs_max = 1, 4
+    n_obs_min, n_obs_max = 1, 3
     size_obstacle_min, size_obstacle_max = 2, 8
 
-    n_nodump_min, n_nodump_max = 1, 4
+    n_nodump_min, n_nodump_max = 1, 3
     size_nodump_min, size_nodump_max = 2, 8
     
     i = 0
@@ -134,8 +134,9 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
 
             ixts = img.shape[0]
             iyts = img.shape[1]
-            ixt = int(ixts * 0.05)
-            iyt = int(iyts * 0.05)
+            # Set margin % here
+            ixt = int(ixts * 0.15)
+            iyt = int(iyts * 0.15)
             img_test = img.copy()
             img_test[ixt:ixts-ixt, iyt:iyts-iyt] = np.array(color_dict["neutral"])
             if np.any(_get_img_mask(img_test, color_dict["digging"])):
@@ -163,20 +164,38 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
                 occ[x:x+sizeox, y:y+sizeoy] = np.ones((3,)) * color_dict["obstacle"]
                 n_occ += 1
 
-        # Non-dumpable but traversable 
+        # Non-dumpable but traversable         
         n_dmp = 0
         dmp = np.ones_like(img) * 255
         n_obs_now = np.random.randint(n_nodump_min, n_nodump_max + 1, ())
         mask_occ = _get_img_mask(occ, color_dict["obstacle"])
         while n_dmp < n_obs_now:
-            sizeox = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
-            sizeoy = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
-            x = np.random.randint(0, w - sizeox - 1, ())
-            y = np.random.randint(0, h - sizeoy - 1, ())
+            dmp_type = np.random.randint(0, 2, ())
+            if dmp_type.item() == 0:
+                # Squares
+                sizeox = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
+                sizeoy = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
+                x = np.random.randint(0, w - sizeox - 1, ())
+                y = np.random.randint(0, h - sizeoy - 1, ())
+            elif dmp_type.item() == 1:
+                # Roads
+                road_direction = np.random.randint(0, 2, ())
+                if road_direction.item() == 0:
+                    sizeox = w
+                    sizeoy = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
+                    x = 0
+                    y = np.random.randint(0, h - sizeoy - 1, ())
+                elif road_direction.item() == 1:
+                    sizeox = np.random.randint(size_nodump_min, size_nodump_max + 1, ())
+                    sizeoy = h
+                    x = np.random.randint(0, w - sizeox - 1, ())
+                    y = 0
+            else:
+                raise(ValueError(f"{dmp_type.item()=}"))
+            
             if cumulative_mask[x:x+sizeox, y:y+sizeoy].sum() == 0 and mask_occ[x:x+sizeox, y:y+sizeoy].sum() == 0:
                 dmp[x:x+sizeox, y:y+sizeoy] = np.ones((3,)) * color_dict["nondumpable"]
                 n_dmp += 1
-
 
         # Get dumping constraints
         # if level == "medium":
