@@ -40,13 +40,13 @@ def generate_trenches(level, n_imgs, img_edge_min, img_edge_max, sizes_small, si
 
             corner_dump = np.random.randint(0, 4, ())
             if corner_dump == 0:
-                img[0:w//2, :h, :] = np.ones((w//2, h, 3)) * np.array(color_dict["dumping"])
+                img[0:int(0.8*w), :h, :] = np.ones((int(w*0.8), h, 3)) * np.array(color_dict["dumping"])
             elif corner_dump == 1:
-                img[w//2:, :h, :] = np.ones((w-w//2, h, 3)) * np.array(color_dict["dumping"])
+                img[int(0.2*w):, :h, :] = np.ones((w-int(w*0.2), h, 3)) * np.array(color_dict["dumping"])
             elif corner_dump == 2:
-                img[:w, h//2:, :] = np.ones((w, h-h//2, 3)) * np.array(color_dict["dumping"])
+                img[:w, int(0.2*h):, :] = np.ones((w, h-int(0.2*h), 3)) * np.array(color_dict["dumping"])
             elif corner_dump == 3:
-                img[:w, :h//2, :] = np.ones((w, h//2, 3)) * np.array(color_dict["dumping"])
+                img[:w, :int(0.8*h), :] = np.ones((w, int(0.8*h), 3)) * np.array(color_dict["dumping"])
 
             n_edges = np.random.randint(min_edges, max_edges + 1)
 
