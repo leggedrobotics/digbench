@@ -369,68 +369,75 @@ def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
             inverted_image
         ).astype(inverted_image.dtype)
 
-        # Get the outer profile of the image
-        inverted_image_black = np.where(
-            _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]),
-            0,
+        # Fully dumpable
+        img = np.where(
+            _get_img_mask(inverted_image, color_dict["neutral"])[..., None].repeat(3, -1),
+            color_dict["dumping"],
             inverted_image
         )
-        kernel_dim = int(min(inverted_image_black.shape[:2]) * 0.25)
-        kernel = np.ones((kernel_dim, kernel_dim))
-        expanded_img = convolve2d(inverted_image_black[..., 0], kernel, mode="same")
-        contoured_img = np.where(
-            (expanded_img > 0) & (inverted_image_black[..., 0] == 0),
-            1,
-            inverted_image_black[..., 0]
-        )
-        tmp = _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None] * color_dict["dumping"]
-        contoured_img = np.where(
-            _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None].repeat(3, -1),
-            tmp,
-            contoured_img[..., None].repeat(3, -1)
-        ).astype(np.uint8)
-        contoured_img = np.where(
-            contoured_img == 0,
-            color_dict["neutral"],
-            contoured_img
-        ).astype(np.uint8)
+
+        # Get the outer profile of the image
+        # inverted_image_black = np.where(
+        #     _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]),
+        #     0,
+        #     inverted_image
+        # )
+        # kernel_dim = int(min(inverted_image_black.shape[:2]) * 0.25)
+        # kernel = np.ones((kernel_dim, kernel_dim))
+        # expanded_img = convolve2d(inverted_image_black[..., 0], kernel, mode="same")
+        # contoured_img = np.where(
+        #     (expanded_img > 0) & (inverted_image_black[..., 0] == 0),
+        #     1,
+        #     inverted_image_black[..., 0]
+        # )
+        # tmp = _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None] * color_dict["dumping"]
+        # contoured_img = np.where(
+        #     _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None].repeat(3, -1),
+        #     tmp,
+        #     contoured_img[..., None].repeat(3, -1)
+        # ).astype(np.uint8)
+        # contoured_img = np.where(
+        #     contoured_img == 0,
+        #     color_dict["neutral"],
+        #     contoured_img
+        # ).astype(np.uint8)
 
         # Apply 3 dumping levels
         i += 1
-        w, h, _ = contoured_img.shape
-        for level in ["easy", "medium", "hard"]:
-            if level == "easy":
-                img = contoured_img
-            elif level == "medium":
-                side_constraints_medium = [
-                    (np.arange(w) < w // 2)[:, None].repeat(h, 1),
-                    (np.arange(w) > w // 2)[:, None].repeat(h, 1),
-                    (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
-                    (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
-                ]
-                img = np.where(
-                    (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_medium[i % 4])[..., None].repeat(3, -1),
-                    np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
-                    contoured_img,
-                ).astype(np.uint8)
-            elif level == "hard":
-                side_constraints_hard = [
-                    (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
-                    (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
-                    (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
-                    (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
-                ]
-                img = np.where(
-                    (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_hard[i % 4])[..., None].repeat(3, -1),
-                    np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
-                    contoured_img,
-                ).astype(np.uint8)            
+        # w, h, _ = contoured_img.shape
+        # for level in ["easy", "medium", "hard"]:
+        #     if level == "easy":
+        #         img = contoured_img
+        #     elif level == "medium":
+        #         side_constraints_medium = [
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1),
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1),
+        #             (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #         ]
+        #         img = np.where(
+        #             (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_medium[i % 4])[..., None].repeat(3, -1),
+        #             np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+        #             contoured_img,
+        #         ).astype(np.uint8)
+        #     elif level == "hard":
+        #         side_constraints_hard = [
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #         ]
+        #         img = np.where(
+        #             (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_hard[i % 4])[..., None].repeat(3, -1),
+        #             np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+        #             contoured_img,
+        #         ).astype(np.uint8)            
             
-            # Save the inverted image to the inverted folder
-            p = Path(f"{image_inverted_folder}/{level}/images")
-            p.mkdir(parents=True, exist_ok=True)
-            inverted_image_path = p / filename
-            cv2.imwrite(str(inverted_image_path), img.astype(np.uint8))
+        # Save the inverted image to the inverted folder
+        p = Path(f"{image_inverted_folder}/images")
+        p.mkdir(parents=True, exist_ok=True)
+        inverted_image_path = p / filename
+        cv2.imwrite(str(inverted_image_path), img.astype(np.uint8))
 
         print(f"Foundations '{filename}' created successfully.")
 

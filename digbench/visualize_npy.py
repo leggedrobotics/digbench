@@ -2,7 +2,7 @@ import os
 import numpy as np
 import cv2
 
-i = np.random.randint(1, 1000)
+i = np.random.randint(1, 600)
 
 package_dir = os.path.dirname(os.path.abspath(__file__))
 # path = package_dir + f'/../data/openstreet/train/benchmark_20_40/terra/foundations/hard/images/img_{i}.npy'
@@ -10,7 +10,8 @@ package_dir = os.path.dirname(os.path.abspath(__file__))
 # path = package_dir + f'/../data/openstreet/train/benchmark_60_60/terra/rectangles_60/images/img_{i}.npy'
 # path = package_dir + f'/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/images/img_{i}.npy'
 
-path = package_dir + f'/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/dumpability/img_{i}.npy'
+# path = package_dir + f'/../data/openstreet/train/benchmark_60_61/terra/trenches/easy/images/img_{i}.npy'
+path = package_dir + f'/../data/openstreet/train/benchmark_20_50/terra/foundations/images/img_{i}.npy'
 
 m = np.load(path)
 print(m.shape)
