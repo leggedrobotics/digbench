@@ -2,8 +2,22 @@ import os
 import shutil
 
 import numpy as np
+from pathlib import Path
+from scipy.signal import convolve2d
 
 from digbench import terrain_generation
+
+color_dict = {
+    "neutral": [220, 220, 220],
+    "digging": [255, 255, 255],
+    "dumping": [90, 191, 20],
+    "nondumpable": [255, 0, 0],
+    "obstacle": [0, 0, 255],
+}
+
+
+def _get_img_mask(img, color_triplet):
+    return (img[..., 0] == color_triplet[0]) * (img[..., 1] == color_triplet[1]) * (img[..., 2] == color_triplet[2])
 
 
 def shrink_obstacles(image: np.ndarray, shrink_factor: int = 1):
@@ -322,6 +336,112 @@ def invert_dataset(image_folder, image_inverted_folder):
         print(f"Image '{filename}' inverted successfully.")
 
 
+def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
+    """
+    This function inverts the color of the images in the image folder.
+    Also, it applies 3 different dump patterns (easy, medium, hard),
+    and saves the image to 3 different subfolders of image_inverted_folder.
+    """
+    # Create the inverted folder if it doesn't exist
+    if not os.path.exists(image_inverted_folder):
+        os.makedirs(image_inverted_folder)
+
+    # Iterate over the images in the image folder
+    i = -1
+    for filename in os.listdir(image_folder):
+        image_path = os.path.join(image_folder, filename)
+
+        # Read the image using OpenCV
+        image = cv2.imread(image_path)
+
+        # Check if image is None or has no shape
+        if image is None or image.shape[0] is None or image.shape[1] is None:
+            print(f"Unable to read or process image '{filename}'. Skipping...")
+            continue
+
+        # Invert the image using the invert_map function
+        inverted_image = terrain_generation.invert_map(image)
+
+        # Fix image such that it only has color_dict colors
+        inverted_image = np.where(
+            (~(_get_img_mask(inverted_image, color_dict["digging"]) | _get_img_mask(inverted_image, color_dict["dumping"]) | _get_img_mask(inverted_image, color_dict["neutral"])))[..., None].repeat(3, -1),
+            np.array(color_dict["digging"])[None, None].repeat(inverted_image.shape[0], 0).repeat(inverted_image.shape[1], 1),
+            inverted_image
+        ).astype(inverted_image.dtype)
+
+        # Fully dumpable
+        img = np.where(
+            _get_img_mask(inverted_image, color_dict["neutral"])[..., None].repeat(3, -1),
+            color_dict["dumping"],
+            inverted_image
+        )
+
+        # Get the outer profile of the image
+        # inverted_image_black = np.where(
+        #     _get_img_mask(inverted_image[..., None].repeat(3, -1), color_dict["neutral"]),
+        #     0,
+        #     inverted_image
+        # )
+        # kernel_dim = int(min(inverted_image_black.shape[:2]) * 0.25)
+        # kernel = np.ones((kernel_dim, kernel_dim))
+        # expanded_img = convolve2d(inverted_image_black[..., 0], kernel, mode="same")
+        # contoured_img = np.where(
+        #     (expanded_img > 0) & (inverted_image_black[..., 0] == 0),
+        #     1,
+        #     inverted_image_black[..., 0]
+        # )
+        # tmp = _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None] * color_dict["dumping"]
+        # contoured_img = np.where(
+        #     _get_img_mask(contoured_img[..., None].repeat(3, -1), [1, 1, 1])[..., None].repeat(3, -1),
+        #     tmp,
+        #     contoured_img[..., None].repeat(3, -1)
+        # ).astype(np.uint8)
+        # contoured_img = np.where(
+        #     contoured_img == 0,
+        #     color_dict["neutral"],
+        #     contoured_img
+        # ).astype(np.uint8)
+
+        # Apply 3 dumping levels
+        i += 1
+        # w, h, _ = contoured_img.shape
+        # for level in ["easy", "medium", "hard"]:
+        #     if level == "easy":
+        #         img = contoured_img
+        #     elif level == "medium":
+        #         side_constraints_medium = [
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1),
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1),
+        #             (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #         ]
+        #         img = np.where(
+        #             (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_medium[i % 4])[..., None].repeat(3, -1),
+        #             np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+        #             contoured_img,
+        #         ).astype(np.uint8)
+        #     elif level == "hard":
+        #         side_constraints_hard = [
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) < w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) < h // 2)[:, None].repeat(w, 1).T,
+        #             (np.arange(w) > w // 2)[:, None].repeat(h, 1) | (np.arange(h) > h // 2)[:, None].repeat(w, 1).T,
+        #         ]
+        #         img = np.where(
+        #             (_get_img_mask(contoured_img, color_dict["dumping"]) * side_constraints_hard[i % 4])[..., None].repeat(3, -1),
+        #             np.array(color_dict["neutral"])[None, None].repeat(w, 0).repeat(h, 1),
+        #             contoured_img,
+        #         ).astype(np.uint8)            
+            
+        # Save the inverted image to the inverted folder
+        p = Path(f"{image_inverted_folder}/images")
+        p.mkdir(parents=True, exist_ok=True)
+        inverted_image_path = p / filename
+        cv2.imwrite(str(inverted_image_path), img.astype(np.uint8))
+
+        print(f"Foundations '{filename}' created successfully.")
+
+
 def generate_empty_occupancy(image_folder: str, save_folder: str):
     """
     Goes through all the images in image_folder and generate an empty image of the same shape as the
@@ -341,7 +461,7 @@ def generate_empty_occupancy(image_folder: str, save_folder: str):
 
 
 
-def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), max_size=(1920, 1080)):
+def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), max_size=(1920, 1080), copy_metadata=False):
     """
     Goes through all the images, checks the real size in the metadata, and saves the image only if it's size is within
     min_size and max_size. The sizes correspond to the size of the whole image (same as reported in the metadata).
@@ -352,13 +472,18 @@ def size_filter(image_folder, save_folder, metadata_folder, min_size=(20, 20), m
 
     # get the metadata
     for filename in os.listdir(image_folder):
-        image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
-        with open(metadata_folder + '/' + filename[:-4] + '.json') as json_file:
-            metadata = json.load(json_file)
-        # get the real size
-        real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
-        if min_size[0] <= real_dimensions[0] <= max_size[0] and min_size[1] <= real_dimensions[1] <= max_size[1]:
-            cv2.imwrite(save_folder + '/' + filename, image)
+        if filename.endswith(".png"):
+            image = cv2.imread(image_folder + '/' + filename, cv2.IMREAD_GRAYSCALE)
+            metadata_path = metadata_folder + '/' + filename[:-4] + '.json'
+            with open(metadata_path) as json_file:
+                metadata = json.load(json_file)
+            # get the real size
+            real_dimensions = (metadata["real_dimensions"]["width"], metadata["real_dimensions"]["height"])
+            if min_size[0] <= real_dimensions[0] <= max_size[0] and min_size[1] <= real_dimensions[1] <= max_size[1]:
+                cv2.imwrite(save_folder + '/' + filename, image)
+                if copy_metadata:
+                    with open(os.path.join(save_folder + '/' + filename[:-4] + '.json'), 'w') as outfile:
+                        json.dump(metadata, outfile)
 
 
 
@@ -429,3 +554,10 @@ def copy_metadata(folder, target_folder):
             shutil.copy(folder + '/' + filename, target_folder + '/' + filename)
         else:
             continue
+
+def copy_metadata_individual(path_input, path_output, target_folder):
+    # if the folder does not exist, create it
+    if not os.path.exists(target_folder):
+        os.makedirs(target_folder)
+
+    shutil.copy(path_input, path_output)
