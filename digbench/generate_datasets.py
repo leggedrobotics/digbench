@@ -185,11 +185,11 @@ def create_foundations(main_folder):
     utils.invert_dataset_apply_dump_foundations(dataset_folder, save_folder)
     utils.copy_metadata(dataset_folder, save_folder + f'/metadata')
     utils.generate_empty_occupancy(dataset_folder, save_folder + f"/occupancy")
-    # for level in ["easy", "medium", "hard"]:
+    for level in ["easy", "medium", "hard"]:
         # copy metadata folder to save folder and change its name to metadata
-        # utils.copy_metadata(dataset_folder, save_folder + f'/{level}/metadata')
+        utils.copy_metadata(dataset_folder, save_folder + f'/{level}/metadata')
         # generate empty occupancy
-        # utils.generate_empty_occupancy(dataset_folder, save_folder + f"/{level}/occupancy")
+        utils.generate_empty_occupancy(dataset_folder, save_folder + f"/{level}/occupancy")
 
 
 def create_procedural_trenches(main_folder, n_imgs, img_edge_min, img_edge_max, resolution):
@@ -218,10 +218,10 @@ if __name__ == '__main__':
     n_trenches = 1000
     for size in sizes:
         dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
-        # download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
+        download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
         create_foundations(dataset_folder)
-        # create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=1.0)
-        # download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
-        # create_city_crops(dataset_folder)
-        # create_exterior_foundations(dataset_folder)
-        # create_exterior_foundations_traversable(dataset_folder)
+        create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=1.0)
+        download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
+        create_city_crops(dataset_folder)
+        create_exterior_foundations(dataset_folder)
+        create_exterior_foundations_traversable(dataset_folder)

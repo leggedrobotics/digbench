@@ -346,6 +346,10 @@ def invert_dataset_apply_dump_foundations(image_folder, image_inverted_folder):
     if not os.path.exists(image_inverted_folder):
         os.makedirs(image_inverted_folder)
 
+    # Create the image_folder if it doesn't exist
+    if not os.path.exists(image_folder):
+        os.makedirs(image_folder)
+
     # Iterate over the images in the image folder
     i = -1
     for filename in os.listdir(image_folder):

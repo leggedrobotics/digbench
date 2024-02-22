@@ -208,17 +208,17 @@ def _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, du
     #     print("skipping...\n")
     #     return
 
-# def generate_crops_terra(dataset_folder, size):
-#     print("Converting crops...")
-#     for level in ["easy", "medium", "hard"]:
-#         print(f"    {level}...")
-#         img_folder = Path(dataset_folder) / "crops" / level / "images"
-#         metadata_folder = Path(dataset_folder) / "crops" / level / "metadata"
-#         occupancy_folder = Path(dataset_folder) / "crops" / level / "occupancy"
-#         dumpability_folder = Path(dataset_folder) / "crops" / level / "dumpability"
-#         destination_folder = Path(dataset_folder) / "terra" / "crops" / level
-#         destination_folder.mkdir(parents=True, exist_ok=True)
-#         _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
+def generate_crops_terra(dataset_folder, size):
+    print("Converting crops...")
+    for level in ["easy", "medium", "hard"]:
+        print(f"    {level}...")
+        img_folder = Path(dataset_folder) / "crops" / level / "images"
+        metadata_folder = Path(dataset_folder) / "crops" / level / "metadata"
+        occupancy_folder = Path(dataset_folder) / "crops" / level / "occupancy"
+        dumpability_folder = Path(dataset_folder) / "crops" / level / "dumpability"
+        destination_folder = Path(dataset_folder) / "terra" / "crops" / level
+        destination_folder.mkdir(parents=True, exist_ok=True)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
     
 
 def generate_foundations_terra(dataset_folder, size, all_dumpable, copy_metadata):
@@ -231,42 +231,42 @@ def generate_foundations_terra(dataset_folder, size, all_dumpable, copy_metadata
     destination_folder.mkdir(parents=True, exist_ok=True)
     _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size, all_dumpable=all_dumpable, copy_metadata=copy_metadata,
                                downsample=True, has_dumpability=False, center_padding=True)
-    # for level in ["easy", "medium", "hard"]:
-    #     print(f"    {level}...")
-    #     img_folder = Path(dataset_folder) / "foundations" / level / "images"
-    #     metadata_folder = Path(dataset_folder) / "foundations" / level / "metadata"
-    #     occupancy_folder = Path(dataset_folder) / "foundations" / level / "occupancy"
-    #     dumpability_folder = Path(dataset_folder) / "foundations" / level / "dumpability"
-    #     destination_folder = Path(dataset_folder) / "terra" / "foundations" / level
-    #     destination_folder.mkdir(parents=True, exist_ok=True)
-    #     _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size, all_dumpable=all_dumpable, copy_metadata=copy_metadata,
-    #                                generate_border=generate_border)
+    for level in ["easy", "medium", "hard"]:
+        print(f"    {level}...")
+        img_folder = Path(dataset_folder) / "foundations" / level / "images"
+        metadata_folder = Path(dataset_folder) / "foundations" / level / "metadata"
+        occupancy_folder = Path(dataset_folder) / "foundations" / level / "occupancy"
+        dumpability_folder = Path(dataset_folder) / "foundations" / level / "dumpability"
+        destination_folder = Path(dataset_folder) / "terra" / "foundations" / level
+        destination_folder.mkdir(parents=True, exist_ok=True)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size, all_dumpable=all_dumpable, copy_metadata=copy_metadata,
+                                   )
 
 
-# def generate_crops_exterior_terra(dataset_folder, size):
-#     print("Converting crops exterior...")
-#     for level in ["easy", "medium", "hard"]:
-#         print(f"    {level}...")
-#         img_folder = Path(dataset_folder) / "crops_exterior" / level / "images"  # TODO is folder name correct?
-#         metadata_folder = Path(dataset_folder) / "crops_exterior" / level / "metadata"
-#         occupancy_folder = Path(dataset_folder) / "crops_exterior" / level / "occupancy"
-#         dumpability_folder = Path(dataset_folder) / "crops_exterior" / level / "dumpability"
-#         destination_folder = Path(dataset_folder) / "terra" / "crops_exterior" / level  # TODO is folder name correct?
-#         destination_folder.mkdir(parents=True, exist_ok=True)
-#         _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
+def generate_crops_exterior_terra(dataset_folder, size):
+    print("Converting crops exterior...")
+    for level in ["easy", "medium", "hard"]:
+        print(f"    {level}...")
+        img_folder = Path(dataset_folder) / "crops_exterior" / level / "images"  # TODO is folder name correct?
+        metadata_folder = Path(dataset_folder) / "crops_exterior" / level / "metadata"
+        occupancy_folder = Path(dataset_folder) / "crops_exterior" / level / "occupancy"
+        dumpability_folder = Path(dataset_folder) / "crops_exterior" / level / "dumpability"
+        destination_folder = Path(dataset_folder) / "terra" / "crops_exterior" / level  # TODO is folder name correct?
+        destination_folder.mkdir(parents=True, exist_ok=True)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
     
 
-# def generate_foundations_exterior_terra(dataset_folder, size):
-#     print("Converting foundations exterior...")
-#     for level in ["easy", "medium", "hard"]:
-#         print(f"    {level}...")
-#         img_folder = Path(dataset_folder) / "foundations_exterior" / level / "images"  # TODO is folder name correct?
-#         metadata_folder = Path(dataset_folder) / "foundations_exterior" / level / "metadata"
-#         occupancy_folder = Path(dataset_folder) / "foundations_exterior" / level / "occupancy"
-#         dumpability_folder = Path(dataset_folder) / "foundations_exterior" / level / "dumpability"
-#         destination_folder = Path(dataset_folder) / "terra" / "foundations_exterior" / level  # TODO is folder name correct?
-#         destination_folder.mkdir(parents=True, exist_ok=True)
-#         _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
+def generate_foundations_exterior_terra(dataset_folder, size):
+    print("Converting foundations exterior...")
+    for level in ["easy", "medium", "hard"]:
+        print(f"    {level}...")
+        img_folder = Path(dataset_folder) / "foundations_exterior" / level / "images"  # TODO is folder name correct?
+        metadata_folder = Path(dataset_folder) / "foundations_exterior" / level / "metadata"
+        occupancy_folder = Path(dataset_folder) / "foundations_exterior" / level / "occupancy"
+        dumpability_folder = Path(dataset_folder) / "foundations_exterior" / level / "dumpability"
+        destination_folder = Path(dataset_folder) / "terra" / "foundations_exterior" / level  # TODO is folder name correct?
+        destination_folder.mkdir(parents=True, exist_ok=True)
+        _convert_all_imgs_to_terra(img_folder, metadata_folder, occupancy_folder, dumpability_folder, destination_folder, size)
 
 
 def generate_trenches_terra(dataset_folder, size, expansion_factor, all_dumpable):
@@ -285,10 +285,10 @@ def generate_trenches_terra(dataset_folder, size, expansion_factor, all_dumpable
 
 def generate_dataset_terra_format(dataset_folder, size):
     generate_foundations_terra(dataset_folder, size, all_dumpable=False, copy_metadata=False)
-    # generate_trenches_terra(dataset_folder, size, expansion_factor=1, all_dumpable=False)
-    # generate_crops_terra(dataset_folder, size)
-    # generate_crops_exterior_terra(dataset_folder, size)
-    # generate_foundations_exterior_terra(dataset_folder, size)
+    generate_trenches_terra(dataset_folder, size, expansion_factor=1, all_dumpable=False)
+    generate_crops_terra(dataset_folder, size)
+    generate_crops_exterior_terra(dataset_folder, size)
+    generate_foundations_exterior_terra(dataset_folder, size)
 
 
 if __name__ == "__main__":
