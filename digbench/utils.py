@@ -6,13 +6,14 @@ from pathlib import Path
 from scipy.signal import convolve2d
 
 from digbench import terrain_generation
+# Colors represented in RGB format
 
 color_dict = {
-    "neutral": [220, 220, 220],
-    "digging": [255, 255, 255],
-    "dumping": [90, 191, 20],
-    "nondumpable": [255, 0, 0],
-    "obstacle": [0, 0, 255],
+    "neutral": [220, 220, 220],  # Light Gray
+    "digging": [255, 255, 255],  # White
+    "dumping": [90, 191, 20],  # Green
+    "nondumpable": [255, 0, 0],  # Red
+    "obstacle": [0, 0, 255],  # Blue
 }
 
 

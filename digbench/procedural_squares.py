@@ -1,61 +1,63 @@
 import numpy as np
 import os
 from pathlib import Path
+import yaml
 
 
-def generate_squares(n_imgs, x_dim, y_dim, side_len, save_folder=None):
-    """
-    n_imgs, img_edge_min, img_edge_max, resolution=0.1, option=1, save_folder=save_folder
-    option 1: visualize
-    option 2: save to disk
-    """
-    side_len_contour = 3*side_len
-    margin = 5
-    print(f"{margin=}")
-    for i in range(1, n_imgs+1):
-        img = np.zeros((x_dim, y_dim))
-        x = np.random.randint(0, x_dim - side_len_contour - 1, ())
-        y = np.random.randint(0, y_dim - side_len_contour - 1, ())
-
-        edge = np.random.randint(0, 4)
-        if edge == 0:
-            img[x + side_len_contour // 2:x+side_len_contour, y:y+side_len_contour] = 1
-        elif edge == 1:
-            img[x:x+side_len_contour // 2, y:y+side_len_contour] = 1
-        elif edge == 2:
-            img[x:x+side_len_contour, y + side_len_contour // 2:y+side_len_contour] = 1
-        elif edge == 3:
-            img[x:x+side_len_contour, y:y+side_len_contour // 2] = 1
-        else:
-            raise(RuntimeError(f"{edge=}"))
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
 
-        x_margin = x+((side_len_contour-side_len) // 2)-margin
-        y_margin = y+((side_len_contour-side_len) // 2)-margin
-        img[x_margin:x_margin+side_len+2*margin, y_margin:y_margin+side_len+2*margin] = 0
+def generate_squares(n_imgs, x_dim, y_dim, side_lens, save_folder_base):
+    for side_len in side_lens:
+        # Dynamic calculation of maximum margin and contour based on map size and side length
+        max_possible_margin = min(x_dim, y_dim) - (3 * side_len)  # Initial assumption
+        margin = max(1, max_possible_margin // 8)  # Ensure some margin, but limit to available space
+        side_len_contour = 3 * side_len + 2 * margin  # Adjust contour size based on margin
+        
+        for i in range(1, n_imgs+1):
+            if x_dim < side_len_contour or y_dim < side_len_contour:
+                print(f"Skipping generation for side length {side_len} as it cannot fit within the given dimensions.")
+                continue
+            img = np.zeros((x_dim, y_dim))
+            occ = np.zeros_like(img)
+            dmp = np.ones_like(img)
 
-        x_dig = x+((side_len_contour-side_len) // 2)
-        y_dig = y+((side_len_contour-side_len) // 2)
-        img[x_dig:x_dig+side_len, y_dig:y_dig+side_len] = -1
+            x = np.random.randint(0, x_dim - side_len_contour + 1)
+            y = np.random.randint(0, y_dim - side_len_contour + 1)
 
-        img = img.astype(np.int8)
+            img[x:x+side_len_contour, y:y+side_len_contour] = 1  # must dump
+            x_dig = x + margin
+            y_dig = y + margin
+            img[x_dig:x_dig+side_len, y_dig:y_dig+side_len] = -1  # dig
+            img = img.astype(np.int8)
+            
+            # Adjusting non-dumpable and occupation squares placement
+            for _ in range(2):  # Non-dumpable squares
+                x = np.random.randint(0, max(1, x_dim - 3))
+                y = np.random.randint(0, max(1, y_dim - 3))
+                dmp[x:x+3, y:y+3] = 0
+            
+            dmp = np.where(img == 1, 1, dmp).astype(np.bool_)
 
-        occ = np.zeros_like(img)
+            for _ in range(2):  # Occupation squares
+                x = np.random.randint(0, max(1, x_dim - 3))
+                y = np.random.randint(0, max(1, y_dim - 3))
+                occ[x:x+3, y:y+3] = 1
+            
+            occ = np.where((img == 1) | (img == -1), 0, occ).astype(np.bool_)
 
-        save_folder_images = Path(save_folder) / "images"
-        save_folder_occupancy = Path(save_folder) / "occupancy"
-        save_folder_images.mkdir(parents=True, exist_ok=True)
-        save_folder_occupancy.mkdir(parents=True, exist_ok=True)
-        np.save(os.path.join(save_folder_images, "img_" + str(i)), img)
-        np.save(os.path.join(save_folder_occupancy, "img_" + str(i)), occ)
-        print(f"Generated squares {i}")
-
-
-if __name__ == "__main__":
-    n_imgs = 1000
-    x_dim = 60
-    y_dim = 60
-    side_len = 10
-    package_dir = os.path.dirname(os.path.abspath(__file__))
-    save_folder = package_dir + f'/../data/openstreet/train/squares_{side_len}/terra'
-    generate_squares(n_imgs, x_dim, y_dim, side_len, save_folder=save_folder)
+            # Saving
+            save_folder = Path(save_folder_base) / f'squares_final_{side_len}'
+            save_folder_images = save_folder / "images"
+            save_folder_occupancy = save_folder / "occupancy"
+            save_folder_dumpability = save_folder / "dumpability"
+            save_folder_images.mkdir(parents=True, exist_ok=True)
+            save_folder_occupancy.mkdir(parents=True, exist_ok=True)
+            save_folder_dumpability.mkdir(parents=True, exist_ok=True)
+            np.save(os.path.join(save_folder_images, f"img_{i}"), img)
+            np.save(os.path.join(save_folder_occupancy, f"img_{i}"), occ)
+            np.save(os.path.join(save_folder_dumpability, f"img_{i}"), dmp)
+            print(f"Generated square {i} with side length {side_len}, margin {margin}")

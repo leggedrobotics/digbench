@@ -1,0 +1,4 @@
+osmnx
+opencv-python
+pathlib
+scikit-image

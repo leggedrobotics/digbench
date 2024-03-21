@@ -1,6 +1,5 @@
 from digbench import openstreet
 from digbench import utils
-from digbench.procedural_trench import generate_trenches
 import os
 import shutil
 # set seed
@@ -169,6 +168,7 @@ def create_exterior_foundations(main_folder, padding=5):
     shutil.copytree(main_folder + '/exterior_foundations/images', main_folder + '/exterior_foundations/occupancy',
                     dirs_exist_ok=True)
 
+
 def create_exterior_foundations_traversable(main_folder):
     dataset_folder = main_folder + '/exterior_foundations'
     save_folder = main_folder + '/exterior_foundations_traversable'
@@ -185,43 +185,16 @@ def create_foundations(main_folder):
     utils.invert_dataset_apply_dump_foundations(dataset_folder, save_folder)
     utils.copy_metadata(dataset_folder, save_folder + f'/metadata')
     utils.generate_empty_occupancy(dataset_folder, save_folder + f"/occupancy")
-    # for level in ["easy", "medium", "hard"]:
-        # copy metadata folder to save folder and change its name to metadata
-        # utils.copy_metadata(dataset_folder, save_folder + f'/{level}/metadata')
-        # generate empty occupancy
-        # utils.generate_empty_occupancy(dataset_folder, save_folder + f"/{level}/occupancy")
 
-
-def create_procedural_trenches(main_folder, n_imgs, img_edge_min, img_edge_max, resolution):
-    for level, n_trenches in zip(["easy", "medium", "hard"], [(1, 1), (2, 2), (3, 3)]):
-        save_folder = main_folder + f"/trenches/{level}"
-        generate_trenches(
-            level,
-            n_imgs,
-            img_edge_min,
-            img_edge_max,
-            (max(1,int(0.05*img_edge_min)), max(1,int(0.1*img_edge_max))),
-            (max(1, int(0.15*img_edge_min)), max(1, int(0.4*img_edge_max))),
-            n_trenches,
-            0.,
-            resolution,
-            2,
-            save_folder,
-            )
 
 if __name__ == '__main__':
     # Basel center_bbox = (47.5376, 47.6126, 7.5401, 7.6842)
     # Basel center_bbox small = (47.5645, 47.572, 7.5867, 7.5979)
     # Zurich center_bbox small (benchmark) = (47.378177, 47.364622, 8.526535, 8.544894)
-    sizes = [(20, 50)]  #, (40, 80), (80, 160), (160, 320), (320, 640)]
-    package_dir = os.path.dirname(os.path.abspath(__file__))
+    sizes = [(20, 60)]  #, (40, 80), (80, 160), (160, 320), (320, 640)]
+    package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     n_trenches = 1000
     for size in sizes:
-        dataset_folder = package_dir + '/../data/openstreet/train/benchmark_' + str(size[0]) + '_' + str(size[1])
-        # download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
+        dataset_folder = package_dir + '/data/openstreet/'
+        download_foundations(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
         create_foundations(dataset_folder)
-        # create_procedural_trenches(dataset_folder, n_trenches, size[0], size[1], resolution=1.0)
-        # download_city_crops(dataset_folder, min_size=(size[0], size[0]), max_size=(size[1], size[1]), center_bbox=(47.5376, 47.6126, 7.5401, 7.6842))
-        # create_city_crops(dataset_folder)
-        # create_exterior_foundations(dataset_folder)
-        # create_exterior_foundations_traversable(dataset_folder)
